@@ -26,8 +26,8 @@ import java.util.Date
 class MainActivity : ComponentActivity() {
 
     val taskList = TaskList()
-    val taskTest = Task(0, "Tache 1", state = State.TODO)
-    val taskTest1 = Task(1, "Tache 2", state = State.TODO)
+    val taskTest = Task( title = "Tache 1", state = State.TODO)
+    val taskTest1 = Task(title = "Tache 2", state = State.TODO)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -141,7 +141,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
                 }
                 Button(
                     onClick = {
-                                val newTask = Task(0, taskTitle, state = State.TODO)
+                                val newTask = Task(title= taskTitle, state = State.TODO)
                                 taskList.addTask(newTask)
                                 navController.popBackStack()
                               },
