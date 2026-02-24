@@ -27,12 +27,14 @@ class MainActivity : ComponentActivity() {
 
     val taskList = TaskList()
     val taskTest = Task(0, "Tache 1", state = State.TODO)
-    val taskTest1 = Task(1, "Tache 2", state = State.TODO)
+    val taskTest1 = Task(1, "Tache 2", state = State.DONE)
+    val taskTest2 = Task(2, "Tache 3", state = State.LATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         taskList.addTask(taskTest)
         taskList.addTask(taskTest1)
+        taskList.addTask(taskTest2)
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
@@ -43,13 +45,70 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: Task) { // On accepte un modifier en paramètre
-    Text(
-        text = task.title,
-        modifier = modifier, // On l'applique ici
-        color = Color.Gray
-    )
+fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task) {
+    var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val (stateColor, stateLabel) = when (task.state) {
+                com.example.todolist.model.enums.State.DONE -> Color(0xFF4CAF50) to "DONE"
+                com.example.todolist.model.enums.State.TODO -> Color(0xFFFF9800) to "TODO"
+                else -> Color(0xFFFF5252) to "LATE" // Cas Late en rouge
+            }
+
+            Checkbox(
+                checked = isDone,
+                onCheckedChange = { checked ->
+                    isDone = checked
+                    task.state = if (checked) com.example.todolist.model.enums.State.DONE
+                    else com.example.todolist.model.enums.State.TODO
+                },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = Color(0xFF4CAF50),
+                    uncheckedColor = Color(0xFFFF9800)
+                )
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isDone) Color.Gray else Color.Black
+                )
+                if (task.description.isNotEmpty()) {
+                    Text(
+                        text = task.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            Text(
+                text = stateLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = stateColor,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+            )
+        }
+    }
 }
+
 @Composable
 fun AppNavigation(taskList: TaskList) {
     val navController = rememberNavController()
