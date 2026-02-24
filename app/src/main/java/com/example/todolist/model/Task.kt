@@ -19,4 +19,20 @@ data class Task(
     override fun changeState(newState: State) { state = newState }
     override fun changeEndTime(newEndTime: Date) { endTime = newEndTime }
     override fun changeEndDate(newEndDate: Date) { endDate = newEndDate }
+    fun validate() {
+        state = State.DONE
+    }
+    fun cancel() {
+        val now = Date()
+        if (isLate()) {
+            state = State.LATE
+        }
+        else {
+            state = State.TODO
+        }
+    }
+    fun isLate(): Boolean {
+        val now = Date()
+        return now > endDate && now > endTime
+    }
 }

@@ -72,8 +72,11 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task) {
                 checked = isDone,
                 onCheckedChange = { checked ->
                     isDone = checked
-                    task.state = if (checked) com.example.todolist.model.enums.State.DONE
-                    else com.example.todolist.model.enums.State.TODO
+                    if (checked) {
+                        task.validate()
+                    } else {
+                        task.cancel()
+                    }
                 },
                 colors = CheckboxDefaults.colors(
                     checkedColor = Color(0xFF4CAF50),
