@@ -26,9 +26,9 @@ import java.util.Date
 class MainActivity : ComponentActivity() {
 
     val taskList = TaskList()
-    val taskTest = Task(0, "Tache 1", state = State.TODO)
-    val taskTest1 = Task(1, "Tache 2", state = State.DONE)
-    val taskTest2 = Task(2, "Tache 3", state = State.LATE)
+    val taskTest = Task(title =  "Tache 1", state = State.TODO)
+    val taskTest1 = Task(title =  "Tache 2", state = State.DONE)
+    val taskTest2 = Task(title =  "Tache 3", state = State.LATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
