@@ -17,34 +17,51 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.todolist.controller.TaskList
+import com.example.todolist.model.Task
+import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
-import com.example.todolist.view.TodoListScreen
+import java.util.Date
 
 class MainActivity : ComponentActivity() {
 
+    val taskList = TaskList()
+    val taskTest = Task(0, "Tache 1", state = State.TODO)
+    val taskTest1 = Task(1, "Tache 2", state = State.TODO)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        taskList.addTask(taskTest)
+        taskList.addTask(taskTest1)
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
-                AppNavigation()
+                AppNavigation(taskList)
             }
         }
     }
 }
 
 @Composable
-fun AppNavigation() {
+fun Task(modifier: Modifier = Modifier, task: Task) { // On accepte un modifier en paramètre
+    Text(
+        text = task.title,
+        modifier = modifier, // On l'applique ici
+        color = Color.Gray
+    )
+}
+@Composable
+fun AppNavigation(taskList: TaskList) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "task_list") {
-        composable("task_list") { TaskListScreen(navController) }
-        composable("add_task") { AddTaskScreen(navController) }
+        composable("task_list") { TaskListScreen(navController, taskList) }
+        composable("add_task") { AddTaskScreen(navController, taskList) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(navController: NavController) {
+fun TaskListScreen(navController: NavController, taskList: TaskList) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ma Liste de Tâches") }) }
     ) { innerPadding ->
@@ -55,24 +72,30 @@ fun TaskListScreen(navController: NavController) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // CONTAINER DES TÂCHES
-            Box(
+            Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
                     .background(Color(0xFFF1F1F1), shape = RoundedCornerShape(16.dp))
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp) // Espace entre chaque tâche
             ) {
-                Text(
-                    text = "Aucune tâche pour le moment...",
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color.Gray
-                )
+                if (taskList.tasks.isNotEmpty()) {
+                    for (task in taskList.tasks) {
+                        Task(task = task)
+                    }
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Aucune tâche pour le moment...",
+                            color = Color.Gray
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Form Button
             Button(
                 onClick = { navController.navigate("add_task") },
                 modifier = Modifier.fillMaxWidth().height(56.dp)
@@ -85,7 +108,7 @@ fun TaskListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(navController: NavController) {
+fun AddTaskScreen(navController: NavController, taskList: TaskList) {
     var taskTitle by remember { mutableStateOf("") }
 
     Scaffold(
@@ -117,7 +140,10 @@ fun AddTaskScreen(navController: NavController) {
                     Text("Retour")
                 }
                 Button(
-                    onClick = { /* Logique à venir */ navController.popBackStack() },
+                    onClick = {
+                        val newTask = Task(0, "Tache 1", state = State.TODO)
+                        /* Logique à venir */ navController.popBackStack()
+                              },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Valider")
