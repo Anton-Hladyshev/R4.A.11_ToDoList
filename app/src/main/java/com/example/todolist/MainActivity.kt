@@ -200,8 +200,9 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
                 }
                 Button(
                     onClick = {
-                        val newTask = Task(0, "Tache 1", state = State.TODO)
-                        /* Logique à venir */ navController.popBackStack()
+                                val newTask = Task(title= taskTitle, state = State.TODO)
+                                taskList.addTask(newTask)
+                                navController.popBackStack()
                               },
                     modifier = Modifier.weight(1f)
                 ) {
