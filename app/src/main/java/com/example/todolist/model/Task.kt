@@ -1,5 +1,6 @@
 package com.example.todolist.model
 
+import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.State
 import com.example.todolist.model.interfaces.Editable
 import java.util.Date
@@ -12,6 +13,7 @@ data class Task(
     override var endDate: Date = Date(),
     override var endTime: Date = Date(),
     override var state: State = State.TODO,
+    override var periodicity: Periodicity? = null
 ) : Editable {
 
     override fun editTitle(newTitle: String) { title = newTitle }
@@ -19,6 +21,7 @@ data class Task(
     override fun changeState(newState: State) { state = newState }
     override fun changeEndTime(newEndTime: Date) { endTime = newEndTime }
     override fun changeEndDate(newEndDate: Date) { endDate = newEndDate }
+    override fun changePeriodicity(newPeriodicity: Periodicity) { periodicity = newPeriodicity }
     fun validate() {
         state = State.DONE
     }
