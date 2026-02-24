@@ -21,7 +21,6 @@ import com.example.todolist.ui.theme.ToDoListTheme
 import com.example.todolist.view.TodoListScreen
 
 class MainActivity : ComponentActivity() {
-    private val todoController = TodoController()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
