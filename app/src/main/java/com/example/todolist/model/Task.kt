@@ -3,9 +3,10 @@ package com.example.todolist.model
 import com.example.todolist.model.enums.State
 import com.example.todolist.model.interfaces.Editable
 import java.util.Date
+import java.util.UUID
 
 data class Task(
-    val id: Int,
+    val id: String = UUID.randomUUID().toString(),
     override var title: String,
     override var description: String = "",
     override var endDate: Date = Date(),
