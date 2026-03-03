@@ -26,11 +26,9 @@ data class Task(
         state = State.DONE
     }
     fun cancel() {
-        val now = Date()
         if (isLate()) {
             state = State.LATE
-        }
-        else {
+        } else {
             state = State.TODO
         }
     }
