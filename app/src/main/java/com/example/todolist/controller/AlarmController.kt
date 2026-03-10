@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import com.example.todolist.model.Task
 import java.util.Calendar
 
@@ -12,20 +14,7 @@ class AlarmController(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     fun scheduleTaskAlarm(task: Task) {
-        val calendar = Calendar.getInstance()
-        
-        // On combine la date et l'heure de la tâche
-        val taskDate = Calendar.getInstance().apply { time = task.endDate }
-        val taskTime = Calendar.getInstance().apply { time = task.endTime }
-        
-        calendar.set(
-            taskDate.get(Calendar.YEAR),
-            taskDate.get(Calendar.MONTH),
-            taskDate.get(Calendar.DAY_OF_MONTH),
-            taskTime.get(Calendar.HOUR_OF_DAY),
-            taskTime.get(Calendar.MINUTE),
-            0
-        )
+        val calendar = task.deadline.clone() as Calendar
 
         // Alarme pour le moment où la tâche doit être faite
         scheduleAlarm(task, calendar.timeInMillis, false)
@@ -50,11 +39,30 @@ class AlarmController(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            timeInMillis,
-            pendingIntent
-        )
+        if (canScheduleExactAlarms()) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                timeInMillis,
+                pendingIntent
+            )
+        } else {
+            // Repli sur une alarme non exacte si la permission n'est pas accordée
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                timeInMillis,
+                pendingIntent
+            )
+            // Optionnel : Rediriger l'utilisateur vers les paramètres
+            // requestExactAlarmPermission()
+        }
+    }
+
+    private fun canScheduleExactAlarms(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
     }
 
     fun cancelAlarms(task: Task) {

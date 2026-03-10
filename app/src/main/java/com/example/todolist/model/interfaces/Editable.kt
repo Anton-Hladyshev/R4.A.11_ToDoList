@@ -1,12 +1,12 @@
 package com.example.todolist.model.interfaces
 
 import com.example.todolist.model.enums.State
+import java.util.Calendar
 import java.util.Date
 
 interface Editable {
 
-    var endDate: Date
-    var endTime: Date
+    var deadline: Calendar
     var state: State
     var description: String
     var title: String
@@ -14,6 +14,6 @@ interface Editable {
     fun editTitle(newTitle: String)
     fun editDescription(newDescr: String)
     fun changeState(newState: State)
-    fun changeEndTime(newEndTime: Date)
-    fun changeEndDate(newEndDate: Date)
+    fun updateDeadlineDate(newDateMillis: Long)
+    fun updateDeadlineTime(hour: Int, minute: Int)
 }
