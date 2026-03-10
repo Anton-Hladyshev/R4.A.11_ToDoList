@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,8 @@ fun TaskCard(
     alarmController: AlarmController
 ) {
     var isDone by remember { mutableStateOf(task.state == State.DONE) }
+    var isValidating by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     Card(
@@ -54,13 +57,21 @@ fun TaskCard(
 
             Checkbox(
                 checked = isDone,
+                enabled = !isValidating,
                 onCheckedChange = { checked ->
-                    isDone = checked
                     if (checked) {
-                        task.validate()
-                        onTaskCompleted()
+                        isDone = true
+                        isValidating = true
+                        coroutineScope.launch {
+                            task.validate()
+                            // After validate: periodic tasks go back to TODO
+                            isDone = task.state == State.DONE
+                            isValidating = false
+                            onTaskCompleted()
+                        }
                         alarmController.cancelAlarms(task)
                     } else {
+                        isDone = false
                         task.cancel()
                         alarmController.scheduleTaskAlarm(task)
                     }
@@ -125,7 +136,12 @@ fun TaskCard(
                 }
             }
 
-            if (isDone) {
+            if (isValidating) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else if (isDone) {
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Default.Delete,
