@@ -33,6 +33,10 @@ data class Task(
         deadline.set(Calendar.MILLISECOND, 0)
     }
 
+    override fun changePeriodicity(newPeriodicity: Periodicity?) {
+        periodicity = newPeriodicity
+    }
+
     fun validate() {
         state = State.DONE
     }

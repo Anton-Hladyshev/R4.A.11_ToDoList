@@ -1,10 +1,10 @@
 package com.example.todolist
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -18,7 +18,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -41,15 +40,13 @@ import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
-import java.util.Calendar
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import nl.dionsegijn.konfetti.core.models.Size
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -93,11 +90,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, onTaskCompleted: () -> Unit = {}, alarmController: AlarmController) {
-    var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
+fun Task(modifier: Modifier = Modifier, task: Task, onTaskCompleted: () -> Unit = {}, alarmController: AlarmController) {
+    var isDone by remember { mutableStateOf(task.state == State.DONE) }
 
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
     Card(
         modifier = modifier
@@ -114,8 +110,8 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
             verticalAlignment = Alignment.CenterVertically
         ) {
             val (stateColor, stateLabel) = when (task.state) {
-                com.example.todolist.model.enums.State.DONE -> Color(0xFF4CAF50) to "DONE"
-                com.example.todolist.model.enums.State.TODO -> Color(0xFFFF9800) to "TODO"
+                State.DONE -> Color(0xFF4CAF50) to "DONE"
+                State.TODO -> Color(0xFFFF9800) to "TODO"
                 else -> Color(0xFFFF5252) to "LATE"
             }
 
@@ -125,7 +121,7 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
                     isDone = checked
                     if (checked) {
                         task.validate()
-                        onTaskCompleted()   // Callback to call the konfetti animation
+                        onTaskCompleted()
                         alarmController.cancelAlarms(task)
                     } else {
                         task.cancel()
@@ -153,18 +149,17 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
                         color = Color.Gray
                     )
                 }
-                // Affichage de la date et de l'heure de fin de la tâche
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.DateRange,
-                        contentDescription = "Date",
+                        contentDescription = "Deadline",
                         modifier = Modifier.size(14.dp),
                         tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${dateFormat.format(task.endDate)} à ${timeFormat.format(task.endTime)}",
+                        text = dateTimeFormat.format(task.deadline.time),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
@@ -195,20 +190,16 @@ fun AppNavigation(taskList: TaskList, alarmController: AlarmController) {
 @Composable
 fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
     var showFilters by remember { mutableStateOf(false) }
-
-    // Konfetti state
     var konfettiParties by remember { mutableStateOf<List<Party>>(emptyList()) }
 
-    // Filter state
     var selectedStateFilter by remember { mutableStateOf<State?>(null) }
-    var selectedDateFilter by remember { mutableStateOf<java.util.Date?>(null) }
-    var selectedTimeFilter by remember { mutableStateOf<java.util.Date?>(null) }
+    var selectedDateFilter by remember { mutableStateOf<Date?>(null) }
+    var selectedTimeFilter by remember { mutableStateOf<Date?>(null) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val context = LocalContext.current
 
-    // Build filter and get filtered tasks
     val filter = Filter(
         stateFilter = selectedStateFilter,
         endDateFilter = selectedDateFilter,
@@ -231,7 +222,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            // Toggle filter button
             OutlinedButton(
                 onClick = { showFilters = !showFilters },
                 modifier = Modifier.fillMaxWidth()
@@ -239,7 +229,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                 Text(if (showFilters) "Masquer les filtres" else "Afficher les filtres")
             }
 
-            // Filter section
             AnimatedVisibility(visible = showFilters) {
                 Column(
                     modifier = Modifier
@@ -247,7 +236,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         .padding(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // State filter chips
                     Text(
                         text = "État",
                         style = MaterialTheme.typography.labelMedium,
@@ -275,7 +263,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
-                    // Date filter
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -332,7 +319,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
-                    // Time filter
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -390,7 +376,6 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
-                    // Reset all filters button
                     if (selectedStateFilter != null || selectedDateFilter != null || selectedTimeFilter != null) {
                         TextButton(
                             onClick = {
@@ -421,7 +406,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     for (task in filteredTasks) {
                         Task(task = task, onTaskCompleted = {
                             konfettiParties = listOf(
-                                Party(     // Configuration of the konfetti animation overlay
+                                Party(
                                     speed = 0f,
                                     maxSpeed = 30f,
                                     damping = 0.9f,
@@ -468,13 +453,11 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
             }
         }
 
-        // Konfetti overlay
         if (konfettiParties.isNotEmpty()) {
             KonfettiView(
                 modifier = Modifier.fillMaxSize(),
                 parties = konfettiParties
             )
-            // Reset after a delay so the animation can replay on next check
             LaunchedEffect(konfettiParties) {
                 kotlinx.coroutines.delay(3000)
                 konfettiParties = emptyList()
@@ -489,7 +472,6 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
     var taskTitle by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf("") }
 
-    // Date et heure de fin de la tâche
     val calendar = Calendar.getInstance()
     var selectedDate by remember { mutableStateOf(calendar.time) }
     var selectedTime by remember { mutableStateOf(calendar.time) }
@@ -517,8 +499,15 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 label = { Text("Titre") },
                 modifier = Modifier.fillMaxWidth()
             )
+            
+            TextField(
+                value = taskDescription,
+                onValueChange = { taskDescription = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth().height(120.dp),
+                maxLines = 5
+            )
 
-            // Date picker
             OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -564,7 +553,6 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 }
             }
 
-            // Time picker
             OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -623,19 +611,25 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 }
                 Button(
                     onClick = {
-                        val deadline = Calendar.getInstance().apply {
-                            timeInMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
-                            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                            set(Calendar.MINUTE, timePickerState.minute)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }
+                        val deadline = Calendar.getInstance()
+                        val dateCal = Calendar.getInstance().apply { time = selectedDate }
+                        val timeCal = Calendar.getInstance().apply { time = selectedTime }
+                        
+                        deadline.set(
+                            dateCal.get(Calendar.YEAR),
+                            dateCal.get(Calendar.MONTH),
+                            dateCal.get(Calendar.DAY_OF_MONTH),
+                            timeCal.get(Calendar.HOUR_OF_DAY),
+                            timeCal.get(Calendar.MINUTE),
+                            0
+                        )
+                        deadline.set(Calendar.MILLISECOND, 0)
 
                         val newTask = Task(
                             title = taskTitle,
                             description = taskDescription,
                             deadline = deadline,
-                            state = com.example.todolist.model.enums.State.TODO
+                            state = State.TODO
                         )
                         taskList.addTask(newTask)
                         alarmController.scheduleTaskAlarm(newTask)
@@ -649,17 +643,4 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
             }
         }
     }
-}
-
-@Composable
-fun TimePickerDialog(
-    onDismissRequest: () -> Unit,
-    confirmButton: @Composable () -> Unit,
-    content: @Composable () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        confirmButton = confirmButton,
-        text = { content() }
-    )
 }
