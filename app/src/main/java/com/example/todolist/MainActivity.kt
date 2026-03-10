@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,7 +82,7 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task) {
                 },
                 colors = CheckboxDefaults.colors(
                     checkedColor = Color(0xFF4CAF50),
-                    uncheckedColor = Color(0xFFFF9800)
+                    uncheckedColor = if (task.state == State.TODO ) Color(0xFFFF9800) else Color(0xFFFF5252)
                 )
             )
 
@@ -172,6 +174,17 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
 @Composable
 fun AddTaskScreen(navController: NavController, taskList: TaskList) {
     var taskTitle by remember { mutableStateOf("") }
+    var taskDescription by remember { mutableStateOf("") }
+
+    val datePickerState = rememberDatePickerState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))
+    } ?: "Choisir une date"
+
+    var expanded by remember { mutableStateOf(false) }
+    val periodiciteOptions = listOf("Aucune", "Quotidien", "Hebdomadaire", "Mensuel")
+    var selectedPeriodicite by remember { mutableStateOf(periodiciteOptions[0]) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Nouvelle Tâche") }) }
@@ -180,16 +193,74 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TextField(
                 value = taskTitle,
                 onValueChange = { taskTitle = it },
-                label = { Text("Titre de la tâche") },
+                label = { Text("Titre") },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            TextField(
+                value = taskDescription,
+                onValueChange = { taskDescription = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth().height(120.dp),
+                maxLines = 5
+            )
+
+            OutlinedButton(
+                onClick = { showDatePicker = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = selectedDate)
+            }
+
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = { showDatePicker = false }) { Text("OK") }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = selectedPeriodicite,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Périodicité") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    periodiciteOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedPeriodicite = option
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -203,11 +274,17 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
                 }
                 Button(
                     onClick = {
-                                val newTask = Task(title= taskTitle, state = State.TODO)
-                                taskList.addTask(newTask)
-                                navController.popBackStack()
-                              },
-                    modifier = Modifier.weight(1f)
+                        val newTask = Task(
+                            title = taskTitle,
+                            description = taskDescription,
+                            endDate = java.util.Date(datePickerState.selectedDateMillis ?: System.currentTimeMillis()),
+                            state = com.example.todolist.model.enums.State.TODO
+                        )
+                        taskList.addTask(newTask)
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = taskTitle.isNotBlank()
                 ) {
                     Text("Valider")
                 }
