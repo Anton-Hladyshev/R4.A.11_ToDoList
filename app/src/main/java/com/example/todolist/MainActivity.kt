@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
+import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
 import java.text.SimpleDateFormat
@@ -65,7 +67,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, onTaskCompleted: () -> Unit = {}) {
+fun Task(
+    modifier: Modifier = Modifier,
+    task: com.example.todolist.model.Task,
+    onTaskCompleted: () -> Unit = {},
+    onEditClick: () -> Unit = {}
+) {
     var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -141,6 +148,14 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
                 }
             }
 
+            IconButton(onClick = onEditClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Modifier",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
             Text(
                 text = stateLabel,
                 style = MaterialTheme.typography.labelMedium,
@@ -174,16 +189,22 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
     var selectedDateFilter by remember { mutableStateOf<java.util.Date?>(null) }
     var selectedTimeFilter by remember { mutableStateOf<java.util.Date?>(null) }
 
+    // Edit task state
+    var taskToEdit by remember { mutableStateOf<com.example.todolist.model.Task?>(null) }
+    var refreshCounter by remember { mutableIntStateOf(0) }
+
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val context = LocalContext.current
 
-    // Build filter and get filtered tasks
+    // Build filter and get filtered tasks (refreshCounter triggers recomposition after edits)
     val filter = Filter(
         stateFilter = selectedStateFilter,
         endDateFilter = selectedDateFilter,
         endTimeFilter = selectedTimeFilter
     )
+    @Suppress("UNUSED_EXPRESSION")
+    refreshCounter // read to trigger recomposition
     val filteredTasks = if (selectedStateFilter == null && selectedDateFilter == null && selectedTimeFilter == null) {
         taskList.tasks
     } else {
@@ -412,6 +433,8 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
                                     position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
                                 )
                             )
+                        }, onEditClick = {
+                            taskToEdit = task
                         })
                     }
                 } else {
@@ -451,6 +474,253 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
             }
         }
     }
+
+    // Edit task dialog
+    taskToEdit?.let { task ->
+        EditTaskDialog(
+            task = task,
+            onDismiss = { taskToEdit = null },
+            onSave = {
+                refreshCounter++
+                taskToEdit = null
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTaskDialog(
+    task: com.example.todolist.model.Task,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    var editedTitle by remember { mutableStateOf(task.title) }
+    var editedDescription by remember { mutableStateOf(task.description) }
+    var editedState by remember { mutableStateOf(task.state) }
+    var editedPeriodicity by remember { mutableStateOf(task.periodicity) }
+    var editedDate by remember { mutableStateOf(task.endDate) }
+    var editedTime by remember { mutableStateOf(task.endTime) }
+
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val context = LocalContext.current
+
+    var stateExpanded by remember { mutableStateOf(false) }
+    var periodicityExpanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Modifier la tâche") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Title
+                OutlinedTextField(
+                    value = editedTitle,
+                    onValueChange = { editedTitle = it },
+                    label = { Text("Titre") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                // Description
+                OutlinedTextField(
+                    value = editedDescription,
+                    onValueChange = { editedDescription = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4
+                )
+
+                // State dropdown
+                ExposedDropdownMenuBox(
+                    expanded = stateExpanded,
+                    onExpandedChange = { stateExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = editedState.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("État") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stateExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = stateExpanded,
+                        onDismissRequest = { stateExpanded = false }
+                    ) {
+                        State.entries.forEach { state ->
+                            DropdownMenuItem(
+                                text = { Text(state.name) },
+                                onClick = {
+                                    editedState = state
+                                    stateExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Periodicity dropdown
+                ExposedDropdownMenuBox(
+                    expanded = periodicityExpanded,
+                    onExpandedChange = { periodicityExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = editedPeriodicity?.name ?: "Aucune",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Périodicité") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = periodicityExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = periodicityExpanded,
+                        onDismissRequest = { periodicityExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Aucune") },
+                            onClick = {
+                                editedPeriodicity = null
+                                periodicityExpanded = false
+                            }
+                        )
+                        Periodicity.entries.forEach { periodicity ->
+                            DropdownMenuItem(
+                                text = { Text(periodicity.name) },
+                                onClick = {
+                                    editedPeriodicity = periodicity
+                                    periodicityExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Date picker
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val cal = Calendar.getInstance().apply { time = editedDate }
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    val newCal = Calendar.getInstance()
+                                    newCal.set(year, month, dayOfMonth)
+                                    editedDate = newCal.time
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Date",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Date de fin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = dateFormat.format(editedDate),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                // Time picker
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val cal = Calendar.getInstance().apply { time = editedTime }
+                            TimePickerDialog(
+                                context,
+                                { _, hourOfDay, minute ->
+                                    val newCal = Calendar.getInstance()
+                                    newCal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                    newCal.set(Calendar.MINUTE, minute)
+                                    editedTime = newCal.time
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Heure",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Heure de fin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = timeFormat.format(editedTime),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                // Apply changes using Task model methods
+                task.editTitle(editedTitle)
+                task.editDescription(editedDescription)
+                task.changeState(editedState)
+                task.changePeriodicity(editedPeriodicity)
+                task.changeEndDate(editedDate)
+                task.changeEndTime(editedTime)
+                onSave()
+            }) {
+                Text("Enregistrer")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
