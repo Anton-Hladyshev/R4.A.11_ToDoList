@@ -73,6 +73,12 @@ fun EditTaskDialog(
                     onTimeSelected = { editedTime = it },
                     modifier = Modifier
                 )
+
+                // Periodicity selector
+                PeriodicitySelectorCard(
+                    selectedPeriodicity = editedPeriodicity,
+                    onPeriodicityChanged = { editedPeriodicity = it }
+                )
             }
         },
         confirmButton = {
