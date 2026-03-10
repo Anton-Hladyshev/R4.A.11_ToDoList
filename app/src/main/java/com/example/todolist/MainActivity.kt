@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,7 +33,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
-import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
 import java.text.SimpleDateFormat
@@ -71,7 +71,8 @@ fun Task(
     modifier: Modifier = Modifier,
     task: com.example.todolist.model.Task,
     onTaskCompleted: () -> Unit = {},
-    onEditClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
     var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
 
@@ -148,12 +149,22 @@ fun Task(
                 }
             }
 
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Modifier",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            if (isDone) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Supprimer",
+                        tint = Color(0xFFFF5252)
+                    )
+                }
+            } else {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Modifier",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             Text(
@@ -435,6 +446,9 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
                             )
                         }, onEditClick = {
                             taskToEdit = task
+                        }, onDeleteClick = {
+                            taskList.removeTask(task)
+                            refreshCounter++
                         })
                     }
                 } else {
@@ -498,7 +512,6 @@ fun EditTaskDialog(
     var editedTitle by remember { mutableStateOf(task.title) }
     var editedDescription by remember { mutableStateOf(task.description) }
     var editedState by remember { mutableStateOf(task.state) }
-    var editedPeriodicity by remember { mutableStateOf(task.periodicity) }
     var editedDate by remember { mutableStateOf(task.endDate) }
     var editedTime by remember { mutableStateOf(task.endTime) }
 
@@ -507,7 +520,6 @@ fun EditTaskDialog(
     val context = LocalContext.current
 
     var stateExpanded by remember { mutableStateOf(false) }
-    var periodicityExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -569,43 +581,6 @@ fun EditTaskDialog(
                     }
                 }
 
-                // Periodicity dropdown
-                ExposedDropdownMenuBox(
-                    expanded = periodicityExpanded,
-                    onExpandedChange = { periodicityExpanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = editedPeriodicity?.name ?: "Aucune",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Périodicité") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = periodicityExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = periodicityExpanded,
-                        onDismissRequest = { periodicityExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Aucune") },
-                            onClick = {
-                                editedPeriodicity = null
-                                periodicityExpanded = false
-                            }
-                        )
-                        Periodicity.entries.forEach { periodicity ->
-                            DropdownMenuItem(
-                                text = { Text(periodicity.name) },
-                                onClick = {
-                                    editedPeriodicity = periodicity
-                                    periodicityExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
 
                 // Date picker
                 OutlinedCard(
@@ -707,7 +682,6 @@ fun EditTaskDialog(
                 task.editTitle(editedTitle)
                 task.editDescription(editedDescription)
                 task.changeState(editedState)
-                task.changePeriodicity(editedPeriodicity)
                 task.changeEndDate(editedDate)
                 task.changeEndTime(editedTime)
                 onSave()
