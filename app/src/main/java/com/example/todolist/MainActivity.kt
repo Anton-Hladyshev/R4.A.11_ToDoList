@@ -22,6 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Delete
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
@@ -48,7 +51,6 @@ import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import nl.dionsegijn.konfetti.core.models.Size
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -439,6 +441,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                key(refreshCounter) {
                 if (filteredTasks.isNotEmpty()) {
                     for (task in filteredTasks) {
                         Task(task = task, onTaskCompleted = {
@@ -464,6 +467,11 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                                     position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
                                 )
                             )
+                        }, onEditClick = {
+                            taskToEdit = task
+                        }, onDeleteClick = {
+                            taskList.removeTask(task)
+                            refreshCounter++
                         }, alarmController = alarmController)
                     }
                 } else {
@@ -476,6 +484,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                             color = Color.Gray
                         )
                     }
+                }
                 }
             }
 
@@ -526,8 +535,8 @@ fun EditTaskDialog(
 ) {
     var editedTitle by remember { mutableStateOf(task.title) }
     var editedDescription by remember { mutableStateOf(task.description) }
-    var editedDate by remember { mutableStateOf(task.endDate) }
-    var editedTime by remember { mutableStateOf(task.endTime) }
+    var editedDate by remember { mutableStateOf(task.deadline.time) }
+    var editedTime by remember { mutableStateOf(task.deadline.time) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -663,8 +672,12 @@ fun EditTaskDialog(
                 // Apply changes using Task model methods
                 task.editTitle(editedTitle)
                 task.editDescription(editedDescription)
-                task.changeEndDate(editedDate)
-                task.changeEndTime(editedTime)
+                task.updateDeadlineDate(editedDate.time)
+                val timeCal = Calendar.getInstance().apply { time = editedTime }
+                task.updateDeadlineTime(
+                    timeCal.get(Calendar.HOUR_OF_DAY),
+                    timeCal.get(Calendar.MINUTE)
+                )
                 onSave()
             }) {
                 Text("Enregistrer")

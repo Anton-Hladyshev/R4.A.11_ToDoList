@@ -11,6 +11,7 @@ kotlin = "2.0.21"
 composeBom = "2024.09.00"
 navigation = "2.7.3"
 foundation = "1.10.3"
+roomCommonJvm = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +32,7 @@ androidx-navigation-compose = {group = "androidx.navigation", name="navigation-c
 konfetti-xml = { module = "nl.dionsegijn:konfetti-xml", version.ref = "konfettiXml" }
 konfetti-compose = { module = "nl.dionsegijn:konfetti-compose", version.ref = "konfettiXml" }
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
