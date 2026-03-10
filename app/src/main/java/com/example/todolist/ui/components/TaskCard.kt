@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.model.Task
+import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.State
 import java.text.SimpleDateFormat
 import java.util.*
@@ -98,6 +100,28 @@ fun TaskCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
+                }
+                if (task.periodicity != null) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Périodicité",
+                            modifier = Modifier.size(14.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = when (task.periodicity) {
+                                Periodicity.DAILY -> "Quotidienne"
+                                Periodicity.WEEKLY -> "Hebdomadaire"
+                                Periodicity.MONTHLY -> "Mensuelle"
+                                else -> ""
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
 

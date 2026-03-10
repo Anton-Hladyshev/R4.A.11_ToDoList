@@ -13,7 +13,9 @@ import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.State
+import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.ui.components.DatePickerCard
+import com.example.todolist.ui.components.PeriodicitySelectorCard
 import com.example.todolist.ui.components.TimePickerCard
 import java.util.*
 
@@ -26,6 +28,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
     val calendar = Calendar.getInstance()
     var selectedDate by remember { mutableStateOf(calendar.time) }
     var selectedTime by remember { mutableStateOf(calendar.time) }
+    var selectedPeriodicity by remember { mutableStateOf<Periodicity?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Nouvelle Tâche") }) }
@@ -70,6 +73,12 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 onTimeSelected = { selectedTime = it }
             )
 
+            // Periodicity selector
+            PeriodicitySelectorCard(
+                selectedPeriodicity = selectedPeriodicity,
+                onPeriodicityChanged = { selectedPeriodicity = it }
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -100,7 +109,8 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                             title = taskTitle,
                             description = taskDescription,
                             deadline = deadline,
-                            state = State.TODO
+                            state = State.TODO,
+                            periodicity = selectedPeriodicity
                         )
                         taskList.addTask(newTask)
                         alarmController.scheduleTaskAlarm(newTask)
