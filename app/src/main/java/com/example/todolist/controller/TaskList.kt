@@ -12,6 +12,10 @@ class TaskList {
         _tasks.add(task)
     }
 
+    fun removeTask(task: Task) {
+        _tasks.remove(task)
+    }
+
     fun getFilteredTasks(filter: TaskSpecification): List<Task> {
         return _tasks.filter { filter.isSatisfiedBy(it) }
     }

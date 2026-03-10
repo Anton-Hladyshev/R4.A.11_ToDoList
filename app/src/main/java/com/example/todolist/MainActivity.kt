@@ -22,6 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,18 +36,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Delete
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import nl.dionsegijn.konfetti.compose.KonfettiView
 import nl.dionsegijn.konfetti.core.Party
 import nl.dionsegijn.konfetti.core.Position
 import nl.dionsegijn.konfetti.core.emitter.Emitter
 import nl.dionsegijn.konfetti.core.models.Size
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -67,9 +72,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         alarmController = AlarmController(this)
-        
+
         checkNotificationPermission()
-        
+
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
@@ -90,11 +95,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: Task, onTaskCompleted: () -> Unit = {}, alarmController: AlarmController) {
-    var isDone by remember { mutableStateOf(task.state == State.DONE) }
+fun Task(modifier: Modifier = Modifier, task: Task, onTaskCompleted: () -> Unit = {}, onEditClick: () -> Unit = {}, onDeleteClick: () -> Unit = {}, alarmController: AlarmController) {
+    var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
 
     val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -149,6 +153,7 @@ fun Task(modifier: Modifier = Modifier, task: Task, onTaskCompleted: () -> Unit 
                         color = Color.Gray
                     )
                 }
+                // Affichage de la date et de l'heure de fin de la tâche
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -162,6 +167,24 @@ fun Task(modifier: Modifier = Modifier, task: Task, onTaskCompleted: () -> Unit 
                         text = dateTimeFormat.format(task.deadline.time),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
+                    )
+                }
+            }
+
+            if (isDone) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Supprimer",
+                        tint = Color(0xFFFF5252)
+                    )
+                }
+            } else {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Modifier",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -190,21 +213,31 @@ fun AppNavigation(taskList: TaskList, alarmController: AlarmController) {
 @Composable
 fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
     var showFilters by remember { mutableStateOf(false) }
+
+    // Konfetti state
     var konfettiParties by remember { mutableStateOf<List<Party>>(emptyList()) }
 
+    // Filter state
     var selectedStateFilter by remember { mutableStateOf<State?>(null) }
     var selectedDateFilter by remember { mutableStateOf<Date?>(null) }
     var selectedTimeFilter by remember { mutableStateOf<Date?>(null) }
+
+    // Edit task state
+    var taskToEdit by remember { mutableStateOf<com.example.todolist.model.Task?>(null) }
+    var refreshCounter by remember { mutableIntStateOf(0) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val context = LocalContext.current
 
+    // Build filter and get filtered tasks
     val filter = Filter(
         stateFilter = selectedStateFilter,
         endDateFilter = selectedDateFilter,
         endTimeFilter = selectedTimeFilter
     )
+    @Suppress("UNUSED_EXPRESSION")
+    refreshCounter // read to trigger recomposition
     val filteredTasks = if (selectedStateFilter == null && selectedDateFilter == null && selectedTimeFilter == null) {
         taskList.tasks
     } else {
@@ -222,6 +255,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+            // Toggle filter button
             OutlinedButton(
                 onClick = { showFilters = !showFilters },
                 modifier = Modifier.fillMaxWidth()
@@ -229,6 +263,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                 Text(if (showFilters) "Masquer les filtres" else "Afficher les filtres")
             }
 
+            // Filter section
             AnimatedVisibility(visible = showFilters) {
                 Column(
                     modifier = Modifier
@@ -236,6 +271,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         .padding(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // State filter chips
                     Text(
                         text = "État",
                         style = MaterialTheme.typography.labelMedium,
@@ -263,6 +299,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
+                    // Date filter
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -319,6 +356,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
+                    // Time filter
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -376,6 +414,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                         }
                     }
 
+                    // Reset all filters button
                     if (selectedStateFilter != null || selectedDateFilter != null || selectedTimeFilter != null) {
                         TextButton(
                             onClick = {
@@ -402,6 +441,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                key(refreshCounter) {
                 if (filteredTasks.isNotEmpty()) {
                     for (task in filteredTasks) {
                         Task(task = task, onTaskCompleted = {
@@ -427,6 +467,11 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                                     position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
                                 )
                             )
+                        }, onEditClick = {
+                            taskToEdit = task
+                        }, onDeleteClick = {
+                            taskList.removeTask(task)
+                            refreshCounter++
                         }, alarmController = alarmController)
                     }
                 } else {
@@ -439,6 +484,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                             color = Color.Gray
                         )
                     }
+                }
                 }
             }
 
@@ -453,17 +499,196 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
             }
         }
 
+        // Konfetti overlay
         if (konfettiParties.isNotEmpty()) {
             KonfettiView(
                 modifier = Modifier.fillMaxSize(),
                 parties = konfettiParties
             )
+            // Reset after a delay so the animation can replay on next check
             LaunchedEffect(konfettiParties) {
                 kotlinx.coroutines.delay(3000)
                 konfettiParties = emptyList()
             }
         }
     }
+
+    // Edit task dialog
+    taskToEdit?.let { task ->
+        EditTaskDialog(
+            task = task,
+            onDismiss = { taskToEdit = null },
+            onSave = {
+                refreshCounter++
+                taskToEdit = null
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTaskDialog(
+    task: com.example.todolist.model.Task,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    var editedTitle by remember { mutableStateOf(task.title) }
+    var editedDescription by remember { mutableStateOf(task.description) }
+    var editedDate by remember { mutableStateOf(task.deadline.time) }
+    var editedTime by remember { mutableStateOf(task.deadline.time) }
+
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val context = LocalContext.current
+
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Modifier la tâche") },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Title
+                OutlinedTextField(
+                    value = editedTitle,
+                    onValueChange = { editedTitle = it },
+                    label = { Text("Titre") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                // Description
+                OutlinedTextField(
+                    value = editedDescription,
+                    onValueChange = { editedDescription = it },
+                    label = { Text("Description") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4
+                )
+
+
+                // Date picker
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val cal = Calendar.getInstance().apply { time = editedDate }
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    val newCal = Calendar.getInstance()
+                                    newCal.set(year, month, dayOfMonth)
+                                    editedDate = newCal.time
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Date",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Date de fin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = dateFormat.format(editedDate),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+
+                // Time picker
+                OutlinedCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val cal = Calendar.getInstance().apply { time = editedTime }
+                            TimePickerDialog(
+                                context,
+                                { _, hourOfDay, minute ->
+                                    val newCal = Calendar.getInstance()
+                                    newCal.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                    newCal.set(Calendar.MINUTE, minute)
+                                    editedTime = newCal.time
+                                },
+                                cal.get(Calendar.HOUR_OF_DAY),
+                                cal.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        },
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Heure",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Heure de fin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = timeFormat.format(editedTime),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                // Apply changes using Task model methods
+                task.editTitle(editedTitle)
+                task.editDescription(editedDescription)
+                task.updateDeadlineDate(editedDate.time)
+                val timeCal = Calendar.getInstance().apply { time = editedTime }
+                task.updateDeadlineTime(
+                    timeCal.get(Calendar.HOUR_OF_DAY),
+                    timeCal.get(Calendar.MINUTE)
+                )
+                onSave()
+            }) {
+                Text("Enregistrer")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -472,6 +697,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
     var taskTitle by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf("") }
 
+    // Date et heure de fin de la tâche
     val calendar = Calendar.getInstance()
     var selectedDate by remember { mutableStateOf(calendar.time) }
     var selectedTime by remember { mutableStateOf(calendar.time) }
@@ -499,7 +725,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 label = { Text("Titre") },
                 modifier = Modifier.fillMaxWidth()
             )
-            
+
             TextField(
                 value = taskDescription,
                 onValueChange = { taskDescription = it },
@@ -508,6 +734,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 maxLines = 5
             )
 
+            // Date picker
             OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -553,6 +780,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 }
             }
 
+            // Time picker
             OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -614,7 +842,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                         val deadline = Calendar.getInstance()
                         val dateCal = Calendar.getInstance().apply { time = selectedDate }
                         val timeCal = Calendar.getInstance().apply { time = selectedTime }
-                        
+
                         deadline.set(
                             dateCal.get(Calendar.YEAR),
                             dateCal.get(Calendar.MONTH),
