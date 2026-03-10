@@ -3,6 +3,7 @@ package com.example.todolist.model
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.State
 import com.example.todolist.model.interfaces.Editable
+import kotlinx.coroutines.delay
 import java.util.Calendar
 import java.util.UUID
 
@@ -37,8 +38,18 @@ data class Task(
         periodicity = newPeriodicity
     }
 
-    fun validate() {
-        state = State.DONE
+    suspend fun validate() {
+        if (periodicity == null) {
+            state = State.DONE
+        }
+         else {
+            state = State.DONE
+            delay(2000)
+            deadline.add(Calendar.DAY_OF_YEAR, periodicity!!.period.days)
+            deadline.add(Calendar.MONTH, periodicity!!.period.months)
+            deadline.add(Calendar.YEAR, periodicity!!.period.years)
+            state = State.TODO
+        }
     }
     
     fun cancel() {
