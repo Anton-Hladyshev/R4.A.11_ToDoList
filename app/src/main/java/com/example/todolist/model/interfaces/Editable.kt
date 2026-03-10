@@ -17,7 +17,7 @@ interface Editable {
     fun editDescription(newDescr: String)
     fun changeState(newState: State)
 
-    fun changePeriodicity(newPeriodicity: Periodicity)
+    fun changePeriodicity(newPeriodicity: Periodicity?)
     fun changeEndTime(newEndTime: Date)
     fun changeEndDate(newEndDate: Date)
 }

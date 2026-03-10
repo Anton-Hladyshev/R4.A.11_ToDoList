@@ -21,7 +21,7 @@ data class Task(
     override fun changeState(newState: State) { state = newState }
     override fun changeEndTime(newEndTime: Date) { endTime = newEndTime }
     override fun changeEndDate(newEndDate: Date) { endDate = newEndDate }
-    override fun changePeriodicity(newPeriodicity: Periodicity) { periodicity = newPeriodicity }
+    override fun changePeriodicity(newPeriodicity: Periodicity?) { periodicity = newPeriodicity }
     fun validate() {
         state = State.DONE
     }
