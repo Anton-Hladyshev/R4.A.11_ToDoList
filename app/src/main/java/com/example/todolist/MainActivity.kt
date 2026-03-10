@@ -36,6 +36,12 @@ import com.example.todolist.ui.theme.ToDoListTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import nl.dionsegijn.konfetti.compose.KonfettiView
+import nl.dionsegijn.konfetti.core.Party
+import nl.dionsegijn.konfetti.core.Position
+import nl.dionsegijn.konfetti.core.emitter.Emitter
+import nl.dionsegijn.konfetti.core.models.Size
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -59,7 +65,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task) {
+fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, onTaskCompleted: () -> Unit = {}) {
     var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -91,6 +97,7 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task) {
                     isDone = checked
                     if (checked) {
                         task.validate()
+                        onTaskCompleted()   // Callback to call the konfetti animation
                     } else {
                         task.cancel()
                     }
@@ -159,6 +166,9 @@ fun AppNavigation(taskList: TaskList) {
 fun TaskListScreen(navController: NavController, taskList: TaskList) {
     var showFilters by remember { mutableStateOf(false) }
 
+    // Konfetti state
+    var konfettiParties by remember { mutableStateOf<List<Party>>(emptyList()) }
+
     // Filter state
     var selectedStateFilter by remember { mutableStateOf<State?>(null) }
     var selectedDateFilter by remember { mutableStateOf<java.util.Date?>(null) }
@@ -180,16 +190,17 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
         taskList.getFilteredTasks(filter)
     }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Ma Liste de Tâches") }) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = { TopAppBar(title = { Text("Ma Liste de Tâches") }) }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Toggle filter button
             OutlinedButton(
                 onClick = { showFilters = !showFilters },
@@ -378,7 +389,30 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
             ) {
                 if (filteredTasks.isNotEmpty()) {
                     for (task in filteredTasks) {
-                        Task(task = task)
+                        Task(task = task, onTaskCompleted = {
+                            konfettiParties = listOf(
+                                Party(     // Configuration of the konfetti animation overlay
+                                    speed = 0f,
+                                    maxSpeed = 30f,
+                                    damping = 0.9f,
+                                    spread = 360,
+                                    colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
+                                    emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+                                    position = Position.Relative(0.5, 0.3)
+                                ),
+                                Party(
+                                    speed = 10f,
+                                    maxSpeed = 50f,
+                                    damping = 0.9f,
+                                    angle = 270,
+                                    spread = 90,
+                                    size = listOf(Size.SMALL, Size.LARGE),
+                                    colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
+                                    emitter = Emitter(duration = 2, TimeUnit.SECONDS).perSecond(50),
+                                    position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
+                                )
+                            )
+                        })
                     }
                 } else {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -400,6 +434,20 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
                 Text("Créer une nouvelle tâche")
+            }
+            }
+        }
+
+        // Konfetti overlay
+        if (konfettiParties.isNotEmpty()) {
+            KonfettiView(
+                modifier = Modifier.fillMaxSize(),
+                parties = konfettiParties
+            )
+            // Reset after a delay so the animation can replay on next check
+            LaunchedEffect(konfettiParties) {
+                kotlinx.coroutines.delay(3000)
+                konfettiParties = emptyList()
             }
         }
     }
