@@ -1,7 +1,9 @@
 package com.example.todolist.model.enums
 
-enum class Periodicity {
-    DAILY,
-    WEEKLY,
-    MONTHLY
+import java.time.Period
+
+enum class Periodicity(val period: Period) {
+    DAILY(Period.ofDays(1)),
+    WEEKLY(Period.ofWeeks(1)),
+    MONTHLY(Period.ofMonths(1))
 }
