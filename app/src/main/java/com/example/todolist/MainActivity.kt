@@ -419,47 +419,49 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (filteredTasks.isNotEmpty()) {
-                    for (task in filteredTasks) {
-                        Task(task = task, onTaskCompleted = {
-                            konfettiParties = listOf(
-                                Party(     // Configuration of the konfetti animation overlay
-                                    speed = 0f,
-                                    maxSpeed = 30f,
-                                    damping = 0.9f,
-                                    spread = 360,
-                                    colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
-                                    emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
-                                    position = Position.Relative(0.5, 0.3)
-                                ),
-                                Party(
-                                    speed = 10f,
-                                    maxSpeed = 50f,
-                                    damping = 0.9f,
-                                    angle = 270,
-                                    spread = 90,
-                                    size = listOf(Size.SMALL, Size.LARGE),
-                                    colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
-                                    emitter = Emitter(duration = 2, TimeUnit.SECONDS).perSecond(50),
-                                    position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
+                key(refreshCounter) {
+                    if (filteredTasks.isNotEmpty()) {
+                        for (task in filteredTasks) {
+                            Task(task = task, onTaskCompleted = {
+                                konfettiParties = listOf(
+                                    Party(     // Configuration of the konfetti animation overlay
+                                        speed = 0f,
+                                        maxSpeed = 30f,
+                                        damping = 0.9f,
+                                        spread = 360,
+                                        colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
+                                        emitter = Emitter(duration = 100, TimeUnit.MILLISECONDS).max(100),
+                                        position = Position.Relative(0.5, 0.3)
+                                    ),
+                                    Party(
+                                        speed = 10f,
+                                        maxSpeed = 50f,
+                                        damping = 0.9f,
+                                        angle = 270,
+                                        spread = 90,
+                                        size = listOf(Size.SMALL, Size.LARGE),
+                                        colors = listOf(0xfce18a, 0xff726d, 0xf4306d, 0xb48def, 0x4CAF50, 0x2196F3, 0xFF9800),
+                                        emitter = Emitter(duration = 2, TimeUnit.SECONDS).perSecond(50),
+                                        position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
+                                    )
                                 )
+                            }, onEditClick = {
+                                taskToEdit = task
+                            }, onDeleteClick = {
+                                taskList.removeTask(task)
+                                refreshCounter++
+                            })
+                        }
+                    } else {
+                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = if (taskList.tasks.isEmpty())
+                                    "Aucune tâche pour le moment..."
+                                else
+                                    "Aucune tâche ne correspond aux filtres.",
+                                color = Color.Gray
                             )
-                        }, onEditClick = {
-                            taskToEdit = task
-                        }, onDeleteClick = {
-                            taskList.removeTask(task)
-                            refreshCounter++
-                        })
-                    }
-                } else {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = if (taskList.tasks.isEmpty())
-                                "Aucune tâche pour le moment..."
-                            else
-                                "Aucune tâche ne correspond aux filtres.",
-                            color = Color.Gray
-                        )
+                        }
                     }
                 }
             }
