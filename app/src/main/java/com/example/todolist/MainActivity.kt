@@ -1,11 +1,16 @@
 package com.example.todolist
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +18,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -24,15 +30,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.State
 import com.example.todolist.ui.theme.ToDoListTheme
+import java.util.Calendar
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -45,27 +54,46 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
-    val taskList = TaskList()
-    val taskTest = Task(title =  "Tache 1", state = State.TODO)
-    val taskTest1 = Task(title =  "Tache 2", state = State.DONE)
-    val taskTest2 = Task(title =  "Tache 3", state = State.LATE)
+    private val taskList = TaskList()
+    private lateinit var alarmController: AlarmController
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(this, "Notifications autorisées", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Notifications refusées", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        taskList.addTask(taskTest)
-        taskList.addTask(taskTest1)
-        taskList.addTask(taskTest2)
+        alarmController = AlarmController(this)
+        
+        checkNotificationPermission()
+        
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
-                AppNavigation(taskList)
+                AppNavigation(taskList, alarmController)
+            }
+        }
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
 }
 
 @Composable
-fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, onTaskCompleted: () -> Unit = {}) {
+fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, onTaskCompleted: () -> Unit = {}, alarmController: AlarmController) {
     var isDone by remember { mutableStateOf(task.state == com.example.todolist.model.enums.State.DONE) }
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -98,13 +126,15 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
                     if (checked) {
                         task.validate()
                         onTaskCompleted()   // Callback to call the konfetti animation
+                        alarmController.cancelAlarms(task)
                     } else {
                         task.cancel()
+                        alarmController.scheduleTaskAlarm(task)
                     }
                 },
                 colors = CheckboxDefaults.colors(
                     checkedColor = Color(0xFF4CAF50),
-                    uncheckedColor = Color(0xFFFF9800)
+                    uncheckedColor = if (task.state == State.TODO ) Color(0xFFFF9800) else Color(0xFFFF5252)
                 )
             )
 
@@ -153,17 +183,17 @@ fun Task(modifier: Modifier = Modifier, task: com.example.todolist.model.Task, o
 }
 
 @Composable
-fun AppNavigation(taskList: TaskList) {
+fun AppNavigation(taskList: TaskList, alarmController: AlarmController) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "task_list") {
-        composable("task_list") { TaskListScreen(navController, taskList) }
-        composable("add_task") { AddTaskScreen(navController, taskList) }
+        composable("task_list") { TaskListScreen(navController, taskList, alarmController) }
+        composable("add_task") { AddTaskScreen(navController, taskList, alarmController) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(navController: NavController, taskList: TaskList) {
+fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
     var showFilters by remember { mutableStateOf(false) }
 
     // Konfetti state
@@ -412,7 +442,7 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
                                     position = Position.Relative(0.0, 0.0).between(Position.Relative(1.0, 0.0))
                                 )
                             )
-                        })
+                        }, alarmController = alarmController)
                     }
                 } else {
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -455,8 +485,9 @@ fun TaskListScreen(navController: NavController, taskList: TaskList) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(navController: NavController, taskList: TaskList) {
+fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
     var taskTitle by remember { mutableStateOf("") }
+    var taskDescription by remember { mutableStateOf("") }
 
     // Date et heure de fin de la tâche
     val calendar = Calendar.getInstance()
@@ -475,14 +506,15 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TextField(
                 value = taskTitle,
                 onValueChange = { taskTitle = it },
-                label = { Text("Titre de la tâche") },
+                label = { Text("Titre") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -591,20 +623,43 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList) {
                 }
                 Button(
                     onClick = {
-                                val newTask = Task(
-                                    title = taskTitle,
-                                    state = State.TODO,
-                                    endDate = selectedDate,
-                                    endTime = selectedTime
-                                )
-                                taskList.addTask(newTask)
-                                navController.popBackStack()
-                              },
-                    modifier = Modifier.weight(1f)
+                        val deadline = Calendar.getInstance().apply {
+                            timeInMillis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+                            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                            set(Calendar.MINUTE, timePickerState.minute)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+
+                        val newTask = Task(
+                            title = taskTitle,
+                            description = taskDescription,
+                            deadline = deadline,
+                            state = com.example.todolist.model.enums.State.TODO
+                        )
+                        taskList.addTask(newTask)
+                        alarmController.scheduleTaskAlarm(newTask)
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = taskTitle.isNotBlank()
                 ) {
                     Text("Valider")
                 }
             }
         }
     }
+}
+
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = confirmButton,
+        text = { content() }
+    )
 }
