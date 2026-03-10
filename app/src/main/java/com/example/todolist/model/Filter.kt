@@ -13,7 +13,7 @@ data class Filter(
     override fun isSatisfiedBy(task: Task) : Boolean {
         return (stateFilter == null || task.state == stateFilter) &&
                 (periodicityFilter == null || task.periodicity == periodicityFilter) &&
-                (endDateFilter == null || !task.endDate.after(endDateFilter)) &&
-                (endTimeFilter == null || !task.endTime.after(endTimeFilter))
+                (endDateFilter == null || !task.deadline.time.after(endDateFilter)) &&
+                (endTimeFilter == null || !task.deadline.time.after(endTimeFilter))
     }
 }
