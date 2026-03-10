@@ -38,7 +38,17 @@ data class Task(
     }
 
     fun validate() {
-        state = State.DONE
+        if (periodicity == null) {
+            state = State.DONE
+        }
+         else {
+            state = State.DONE
+            Thread.sleep(2000)
+            deadline.add(Calendar.DAY_OF_YEAR, periodicity!!.period.days)
+            deadline.add(Calendar.MONTH, periodicity!!.period.months)
+            deadline.add(Calendar.YEAR, periodicity!!.period.years)
+            state = State.TODO
+        }
     }
     
     fun cancel() {
