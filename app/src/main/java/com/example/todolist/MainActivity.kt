@@ -513,7 +513,6 @@ fun EditTaskDialog(
 ) {
     var editedTitle by remember { mutableStateOf(task.title) }
     var editedDescription by remember { mutableStateOf(task.description) }
-    var editedState by remember { mutableStateOf(task.state) }
     var editedDate by remember { mutableStateOf(task.endDate) }
     var editedTime by remember { mutableStateOf(task.endTime) }
 
@@ -521,7 +520,6 @@ fun EditTaskDialog(
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val context = LocalContext.current
 
-    var stateExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -551,37 +549,6 @@ fun EditTaskDialog(
                     minLines = 2,
                     maxLines = 4
                 )
-
-                // State dropdown
-                ExposedDropdownMenuBox(
-                    expanded = stateExpanded,
-                    onExpandedChange = { stateExpanded = it }
-                ) {
-                    OutlinedTextField(
-                        value = editedState.name,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("État") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = stateExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = stateExpanded,
-                        onDismissRequest = { stateExpanded = false }
-                    ) {
-                        State.entries.forEach { state ->
-                            DropdownMenuItem(
-                                text = { Text(state.name) },
-                                onClick = {
-                                    editedState = state
-                                    stateExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
 
 
                 // Date picker
@@ -683,7 +650,6 @@ fun EditTaskDialog(
                 // Apply changes using Task model methods
                 task.editTitle(editedTitle)
                 task.editDescription(editedDescription)
-                task.changeState(editedState)
                 task.changeEndDate(editedDate)
                 task.changeEndTime(editedTime)
                 onSave()
