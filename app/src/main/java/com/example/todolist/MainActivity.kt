@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
         alarmController = AlarmController(this)
         level = Level(this)
         swordShop = SwordShop(this)
-        wallet.deposit(10000)
+        wallet.deposit(100000)
         checkNotificationPermission()
         enableEdgeToEdge()
         setContent {

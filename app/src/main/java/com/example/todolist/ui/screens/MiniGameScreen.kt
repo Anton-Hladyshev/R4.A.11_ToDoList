@@ -1,74 +1,154 @@
 package com.example.todolist.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todolist.model.Level
+import com.example.todolist.model.SwordShop
+import com.example.todolist.model.Wallet
+import com.example.todolist.ui.components.SwordUpgradeComponent
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MiniGameScreen(navController: NavController, level: Level) {
+fun MiniGameScreen(
+    navController: NavController,
+    level: Level,
+    swordShop: SwordShop,
+    wallet: Wallet,
+    showScaffold: Boolean = true
+) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val swordRotation = remember { Animatable(0f) }
+    val swordTranslationY = remember { Animatable(0f) }
+
     val backgroundResId = context.resources.getIdentifier(
         level.getBackgroundResourceName(),
         "drawable",
         context.packageName
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
-        if (backgroundResId != 0) {
-            Image(
-                painter = painterResource(id = backgroundResId),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+    val content = @Composable { padding: PaddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            // Top section with background image and game area
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        scope.launch {
+                            // Strike animation
+                            launch {
+                                swordRotation.animateTo(-45f, animationSpec = tween(100))
+                                swordRotation.animateTo(0f, animationSpec = tween(100))
+                            }
+                            launch {
+                                swordTranslationY.animateTo(20f, animationSpec = tween(100))
+                                swordTranslationY.animateTo(0f, animationSpec = tween(100))
+                            }
+                        }
+                    }
+            ) {
+                // Background Image
+                if (backgroundResId != 0) {
+                    Image(
+                        painter = painterResource(id = backgroundResId),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                // Animated Sword
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = swordShop.currentSword.image),
+                        contentDescription = "Sword",
+                        modifier = Modifier
+                            .size(250.dp)
+                            .graphicsLayer {
+                                rotationZ = swordRotation.value
+                                translationY = swordTranslationY.value
+                                transformOrigin = TransformOrigin(0.5f, 0.8f) // Pivot near handle
+                            }
+                    )
+                }
+                
+                // Overlay text for level (if needed, but it's in top bar too)
+                Text(
+                    text = "Niveau ${level.currentLevel}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp)
+                        .background(Color.Black.copy(alpha = 0.3f), shape = MaterialTheme.shapes.medium)
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    color = Color.White
+                )
+            }
+
+            // Shop Component at the bottom
+            SwordUpgradeComponent(
+                swordShop = swordShop,
+                wallet = wallet,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             )
         }
+    }
 
+    if (showScaffold) {
         Scaffold(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Mini Jeu - Niveau ${level.currentLevel}") },
+                    title = { Text("Mini Jeu") },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f)
+                        containerColor = Color.White.copy(alpha = 0.5f)
                     )
                 )
             }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
-                    )
-                ) {
-
-                }
-            }
+            content(innerPadding)
         }
+    } else {
+        content(PaddingValues(0.dp))
     }
 }

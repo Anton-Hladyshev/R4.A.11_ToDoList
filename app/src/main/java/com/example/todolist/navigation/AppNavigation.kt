@@ -12,10 +12,9 @@ import com.example.todolist.model.Wallet
 import com.example.todolist.ui.screens.*
 
 object Routes {
-    const val TASK_LIST = "task_list"
+    const val MAIN = "main"
     const val ADD_TASK = "add_task"
     const val MINI_GAME = "mini_game"
-    const val SWORD_SHOP = "sword_shop"
 }
 
 @Composable
@@ -27,18 +26,15 @@ fun AppNavigation(
     swordShop: SwordShop
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.TASK_LIST) {
-        composable(Routes.TASK_LIST) {
-            TaskListScreen(navController, taskList, alarmController, wallet, level, swordShop)
+    NavHost(navController = navController, startDestination = Routes.MAIN) {
+        composable(Routes.MAIN) {
+            MainScreen(navController, taskList, alarmController, wallet, level, swordShop)
         }
         composable(Routes.ADD_TASK) {
             AddTaskScreen(navController, taskList, alarmController)
         }
         composable(Routes.MINI_GAME) {
-            MiniGameScreen(navController, level)
-        }
-        composable(Routes.SWORD_SHOP) {
-            SwordShopScreen(navController, swordShop, wallet)
+            MiniGameScreen(navController, level, swordShop, wallet)
         }
     }
 }
