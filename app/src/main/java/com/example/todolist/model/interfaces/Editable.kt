@@ -1,6 +1,7 @@
 package com.example.todolist.model.interfaces
 
 import com.example.todolist.model.enums.Periodicity
+import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import java.util.Calendar
 import java.util.Date
@@ -10,6 +11,7 @@ interface Editable {
     var deadline: Calendar
     var state: State
     var periodicity: Periodicity?
+    var priority: Priority?
     var description: String
     var title: String
 
@@ -19,4 +21,5 @@ interface Editable {
     fun updateDeadlineDate(newDateMillis: Long)
     fun updateDeadlineTime(hour: Int, minute: Int)
     fun changePeriodicity(newPeriodicity: Periodicity?)
+    fun changePriority(newPriority: Priority?)
 }
