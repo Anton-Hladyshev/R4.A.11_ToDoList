@@ -28,6 +28,7 @@ fun EditTaskDialog(
     var editedDate by remember { mutableStateOf(task.deadline.time) }
     var editedTime by remember { mutableStateOf(task.deadline.time) }
     var editedPeriodicity by remember { mutableStateOf(task.periodicity) }
+    var editedPriority by remember { mutableStateOf(task.priority) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -79,6 +80,12 @@ fun EditTaskDialog(
                     selectedPeriodicity = editedPeriodicity,
                     onPeriodicityChanged = { editedPeriodicity = it }
                 )
+
+                // Priority selector
+                PrioritySelectorCard(
+                    selectedPriority = editedPriority,
+                    onPriorityChanged = { editedPriority = it }
+                )
             }
         },
         confirmButton = {
@@ -93,6 +100,7 @@ fun EditTaskDialog(
                     timeCal.get(Calendar.MINUTE)
                 )
                 task.changePeriodicity(editedPeriodicity)
+                task.changePriority(editedPriority)
                 onSave()
             }) {
                 Text("Enregistrer")
