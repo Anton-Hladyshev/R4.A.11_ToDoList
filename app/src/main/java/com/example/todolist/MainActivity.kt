@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Level
+import com.example.todolist.model.SwordShop
 import com.example.todolist.model.Wallet
 import com.example.todolist.navigation.AppNavigation
 import com.example.todolist.ui.theme.ToDoListTheme
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
     private val taskList = TaskList()
     private lateinit var alarmController: AlarmController
     private lateinit var level: Level
+    private lateinit var swordShop: SwordShop
 
     private val wallet = Wallet()
 
@@ -39,12 +41,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         alarmController = AlarmController(this)
         level = Level(this)
-
+        swordShop = SwordShop(this)
+        wallet.deposit(10000)
         checkNotificationPermission()
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
-                AppNavigation(taskList, alarmController, wallet, level)
+                AppNavigation(taskList, alarmController, wallet, level, swordShop)
             }
         }
     }

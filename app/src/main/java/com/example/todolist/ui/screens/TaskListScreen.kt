@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,10 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
-import com.example.todolist.model.Filter
-import com.example.todolist.model.Level
-import com.example.todolist.model.Task
-import com.example.todolist.model.Wallet
+import com.example.todolist.model.*
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
@@ -38,8 +36,14 @@ import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController,
-                   wallet: Wallet, level: Level) {
+fun TaskListScreen(
+    navController: NavController,
+    taskList: TaskList,
+    alarmController: AlarmController,
+    wallet: Wallet,
+    level: Level,
+    swordShop: SwordShop
+) {
     var showFilters by remember { mutableStateOf(false) }
 
     // Konfetti state
@@ -78,6 +82,9 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                 TopAppBar(
                     title = { Text("Ma Liste de Tâches") },
                     actions = {
+                        IconButton(onClick = { navController.navigate(Routes.SWORD_SHOP) }) {
+                            Icon(Icons.Default.Build, contentDescription = "Forge")
+                        }
                         IconButton(onClick = { navController.navigate(Routes.MINI_GAME) }) {
                             Icon(Icons.Default.PlayArrow, contentDescription = "Mini Jeu")
                         }

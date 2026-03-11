@@ -66,26 +66,7 @@ fun MiniGameScreen(navController: NavController, level: Level) {
                         containerColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f)
                     )
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Niveau Actuel : ${level.currentLevel}",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Button(onClick = { level.levelDown() }) {
-                                Text("Niveau Précédent")
-                            }
-                            Button(onClick = { level.levelUp() }) {
-                                Text("Niveau Suivant")
-                            }
-                        }
-                    }
+
                 }
             }
         }
