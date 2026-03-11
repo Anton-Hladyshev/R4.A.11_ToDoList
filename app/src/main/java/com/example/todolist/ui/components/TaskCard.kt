@@ -226,7 +226,7 @@ fun TaskCard(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
-                } else if (!isDone) {
+                } else {
                     IconButton(onClick = onEditClick) {
                         Icon(
                             imageVector = Icons.Default.Edit,
