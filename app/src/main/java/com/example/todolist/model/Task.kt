@@ -14,7 +14,8 @@ data class Task(
     override var description: String = "",
     override var deadline: Calendar = Calendar.getInstance(),
     override var state: State = State.TODO,
-    override var periodicity: Periodicity? = null
+    override var periodicity: Periodicity? = null,
+    override var priority: Priority? = null
 ) : Editable {
 
     override fun editTitle(newTitle: String) { title = newTitle }
