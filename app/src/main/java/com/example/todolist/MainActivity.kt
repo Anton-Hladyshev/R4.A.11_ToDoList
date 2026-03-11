@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
+import com.example.todolist.model.Wallet
 import com.example.todolist.navigation.AppNavigation
 import com.example.todolist.ui.theme.ToDoListTheme
 
@@ -19,6 +20,8 @@ class MainActivity : ComponentActivity() {
 
     private val taskList = TaskList()
     private lateinit var alarmController: AlarmController
+
+    private val wallet = Wallet()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -35,11 +38,10 @@ class MainActivity : ComponentActivity() {
         alarmController = AlarmController(this)
 
         checkNotificationPermission()
-
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
-                AppNavigation(taskList, alarmController)
+                AppNavigation(taskList, alarmController, wallet)
             }
         }
     }

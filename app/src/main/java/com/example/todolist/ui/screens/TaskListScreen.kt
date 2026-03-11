@@ -16,10 +16,12 @@ import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
+import com.example.todolist.model.Wallet
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import com.example.todolist.navigation.Routes
+import com.example.todolist.ui.components.CoinsView
 import com.example.todolist.ui.components.EditTaskDialog
 import com.example.todolist.ui.components.FilterSection
 import com.example.todolist.ui.components.TaskCard
@@ -33,7 +35,8 @@ import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
+fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController,
+                   wallet: Wallet) {
     var showFilters by remember { mutableStateOf(false) }
 
     // Konfetti state
@@ -68,7 +71,14 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Ma Liste de Tâches") }) }
+            topBar = {
+                TopAppBar(
+                    title = { Text("Ma Liste de Tâches") },
+                    actions = {
+                        CoinsView(wallet = wallet, modifier = Modifier.padding(end = 16.dp))
+                    }
+                )
+            }
         ) { innerPadding ->
             Column(
                 modifier = Modifier
@@ -207,4 +217,3 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
         )
     }
 }
-
