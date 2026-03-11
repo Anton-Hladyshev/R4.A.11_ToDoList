@@ -3,6 +3,7 @@ package com.example.todolist.ui.components
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.todolist.model.enums.Periodicity
+import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,6 +30,10 @@ fun FilterSection(
     visible: Boolean,
     selectedStateFilter: State?,
     onStateFilterChanged: (State?) -> Unit,
+    selectedPriorityFilter: Priority?,
+    onPriorityFilterChanged: (Priority?) -> Unit,
+    selectedPeriodicityFilter: Periodicity?,
+    onPeriodicityFilterChanged: (Periodicity?) -> Unit,
     selectedDateFilter: Date?,
     onDateFilterChanged: (Date?) -> Unit,
     selectedTimeFilter: Date?,
@@ -67,6 +74,80 @@ fun FilterSection(
                             onStateFilterChanged(if (selectedStateFilter == state) null else state)
                         },
                         label = { Text(state.name) }
+                    )
+                }
+            }
+
+            // Priority filter chips
+            Text(
+                text = "Priorité",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = selectedPriorityFilter == null,
+                    onClick = { onPriorityFilterChanged(null) },
+                    label = { Text("Toutes") }
+                )
+                Priority.entries.forEach { priority ->
+                    FilterChip(
+                        selected = selectedPriorityFilter == priority,
+                        onClick = {
+                            onPriorityFilterChanged(if (selectedPriorityFilter == priority) null else priority)
+                        },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(priority.color(), shape = androidx.compose.foundation.shape.CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(priority.title)
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Periodicity filter chips
+            Text(
+                text = "Périodicité",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = selectedPeriodicityFilter == null,
+                    onClick = { onPeriodicityFilterChanged(null) },
+                    label = { Text("Toutes") }
+                )
+                Periodicity.entries.forEach { periodicity ->
+                    FilterChip(
+                        selected = selectedPeriodicityFilter == periodicity,
+                        onClick = {
+                            onPeriodicityFilterChanged(if (selectedPeriodicityFilter == periodicity) null else periodicity)
+                        },
+                        label = {
+                            Text(
+                                when (periodicity) {
+                                    Periodicity.DAILY -> "Quotidienne"
+                                    Periodicity.WEEKLY -> "Hebdomadaire"
+                                    Periodicity.MONTHLY -> "Mensuelle"
+                                }
+                            )
+                        }
                     )
                 }
             }
@@ -187,10 +268,12 @@ fun FilterSection(
             }
 
             // Reset all filters button
-            if (selectedStateFilter != null || selectedDateFilter != null || selectedTimeFilter != null) {
+            if (selectedStateFilter != null || selectedPriorityFilter != null || selectedPeriodicityFilter != null || selectedDateFilter != null || selectedTimeFilter != null) {
                 TextButton(
                     onClick = {
                         onStateFilterChanged(null)
+                        onPriorityFilterChanged(null)
+                        onPeriodicityFilterChanged(null)
                         onDateFilterChanged(null)
                         onTimeFilterChanged(null)
                     },

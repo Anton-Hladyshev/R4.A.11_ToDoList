@@ -1,6 +1,7 @@
 package com.example.todolist.model
 
 import com.example.todolist.model.enums.Periodicity
+import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import com.example.todolist.model.interfaces.Editable
 import kotlinx.coroutines.delay
@@ -13,7 +14,8 @@ data class Task(
     override var description: String = "",
     override var deadline: Calendar = Calendar.getInstance(),
     override var state: State = State.TODO,
-    override var periodicity: Periodicity? = null
+    override var periodicity: Periodicity? = null,
+    override var priority: Priority? = null
 ) : Editable {
 
     override fun editTitle(newTitle: String) { title = newTitle }
@@ -36,6 +38,10 @@ data class Task(
 
     override fun changePeriodicity(newPeriodicity: Periodicity?) {
         periodicity = newPeriodicity
+    }
+
+    override fun changePriority(newPriority: Priority?) {
+        priority = newPriority
     }
 
     suspend fun validate() {

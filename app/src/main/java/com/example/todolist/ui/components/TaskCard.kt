@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
+import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -153,11 +155,26 @@ fun TaskCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (isDone) Color.Gray else Color.Black
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (task.priority != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(
+                                        color = task.priority!!.color(),
+                                        shape = CircleShape
+                                    )
+                            )
+                        }
+                        Text(
+                            text = task.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (isDone) Color.Gray else Color.Black
+                        )
+                    }
                     if (task.description.isNotEmpty()) {
                         Text(
                             text = task.description,
@@ -209,7 +226,7 @@ fun TaskCard(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.dp
                     )
-                } else if (!isDone) {
+                } else {
                     IconButton(onClick = onEditClick) {
                         Icon(
                             imageVector = Icons.Default.Edit,

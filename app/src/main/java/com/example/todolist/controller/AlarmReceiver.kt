@@ -12,7 +12,16 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val taskTitle = intent.getStringExtra("TASK_TITLE") ?: "Tâche"
         val isLate = intent.getBooleanExtra("IS_LATE", false)
-        
+        val priorityName = intent.getStringExtra("PRIORITY")
+
+        val priorityEmoji = when (priorityName) {
+            "CRITICAL" -> "🔴 "
+            "IMPORTANT" -> "🟠 "
+            "ROUTINE" -> "🟡 "
+            "SOMEDAY" -> "🟢 "
+            else -> ""
+        }
+
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "task_alarms"
 
@@ -26,14 +35,16 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         val message = if (isLate) {
-            "La tâche \"$taskTitle\" est en retard d'un jour !"
+            "${priorityEmoji}La tâche \"$taskTitle\" est en retard d'un jour !"
         } else {
-            "C'est l'heure de faire : \"$taskTitle\""
+            "${priorityEmoji}C'est l'heure de faire : \"$taskTitle\""
         }
+
+        val notificationTitle = "${priorityEmoji}Rappel de tâche"
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Rappel de tâche")
+            .setContentTitle(notificationTitle)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

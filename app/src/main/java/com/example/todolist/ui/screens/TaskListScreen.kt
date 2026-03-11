@@ -16,6 +16,8 @@ import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
 import com.example.todolist.model.Task
+import com.example.todolist.model.enums.Periodicity
+import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import com.example.todolist.navigation.Routes
 import com.example.todolist.ui.components.EditTaskDialog
@@ -39,6 +41,8 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
 
     // Filter state
     var selectedStateFilter by remember { mutableStateOf<State?>(null) }
+    var selectedPriorityFilter by remember { mutableStateOf<Priority?>(null) }
+    var selectedPeriodicityFilter by remember { mutableStateOf<Periodicity?>(null) }
     var selectedDateFilter by remember { mutableStateOf<Date?>(null) }
     var selectedTimeFilter by remember { mutableStateOf<Date?>(null) }
 
@@ -49,12 +53,14 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
     // Build filter and get filtered tasks
     val filter = Filter(
         stateFilter = selectedStateFilter,
+        priorityFilter = selectedPriorityFilter,
+        periodicityFilter = selectedPeriodicityFilter,
         endDateFilter = selectedDateFilter,
         endTimeFilter = selectedTimeFilter
     )
     @Suppress("UNUSED_EXPRESSION")
     refreshCounter // read to trigger recomposition
-    val filteredTasks = if (selectedStateFilter == null && selectedDateFilter == null && selectedTimeFilter == null) {
+    val filteredTasks = if (selectedStateFilter == null && selectedPriorityFilter == null && selectedPeriodicityFilter == null && selectedDateFilter == null && selectedTimeFilter == null) {
         taskList.tasks
     } else {
         taskList.getFilteredTasks(filter)
@@ -84,6 +90,10 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                     visible = showFilters,
                     selectedStateFilter = selectedStateFilter,
                     onStateFilterChanged = { selectedStateFilter = it },
+                    selectedPriorityFilter = selectedPriorityFilter,
+                    onPriorityFilterChanged = { selectedPriorityFilter = it },
+                    selectedPeriodicityFilter = selectedPeriodicityFilter,
+                    onPeriodicityFilterChanged = { selectedPeriodicityFilter = it },
                     selectedDateFilter = selectedDateFilter,
                     onDateFilterChanged = { selectedDateFilter = it },
                     selectedTimeFilter = selectedTimeFilter,

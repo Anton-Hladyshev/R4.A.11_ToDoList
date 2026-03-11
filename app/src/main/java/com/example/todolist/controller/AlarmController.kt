@@ -30,6 +30,7 @@ class AlarmController(private val context: Context) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("TASK_TITLE", task.title)
             putExtra("IS_LATE", isLate)
+            putExtra("PRIORITY", task.priority?.name)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
