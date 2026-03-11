@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +17,7 @@ import androidx.navigation.NavController
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Filter
+import com.example.todolist.model.Level
 import com.example.todolist.model.Task
 import com.example.todolist.model.Wallet
 import com.example.todolist.model.enums.Periodicity
@@ -36,7 +39,7 @@ import java.util.concurrent.TimeUnit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController,
-                   wallet: Wallet) {
+                   wallet: Wallet, level: Level) {
     var showFilters by remember { mutableStateOf(false) }
 
     // Konfetti state
@@ -75,6 +78,9 @@ fun TaskListScreen(navController: NavController, taskList: TaskList, alarmContro
                 TopAppBar(
                     title = { Text("Ma Liste de Tâches") },
                     actions = {
+                        IconButton(onClick = { navController.navigate(Routes.MINI_GAME) }) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Mini Jeu")
+                        }
                         CoinsView(wallet = wallet, modifier = Modifier.padding(end = 16.dp))
                     }
                 )
