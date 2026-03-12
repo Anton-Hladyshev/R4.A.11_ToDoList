@@ -5,21 +5,38 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.MonsterManager
 import com.example.todolist.controller.TaskList
-import com.example.todolist.ui.screens.AddTaskScreen
-import com.example.todolist.ui.screens.TaskListScreen
+import com.example.todolist.model.Level
+import com.example.todolist.model.SwordShop
+import com.example.todolist.model.Wallet
+import com.example.todolist.ui.screens.*
 
 object Routes {
-    const val TASK_LIST = "task_list"
+    const val MAIN = "main"
     const val ADD_TASK = "add_task"
+    const val MINI_GAME = "mini_game"
 }
 
 @Composable
-fun AppNavigation(taskList: TaskList, alarmController: AlarmController) {
+fun AppNavigation(
+    taskList: TaskList,
+    alarmController: AlarmController,
+    wallet: Wallet,
+    level: Level,
+    swordShop: SwordShop,
+    monsterManager: MonsterManager
+) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.TASK_LIST) {
-        composable(Routes.TASK_LIST) { TaskListScreen(navController, taskList, alarmController) }
-        composable(Routes.ADD_TASK) { AddTaskScreen(navController, taskList, alarmController) }
+    NavHost(navController = navController, startDestination = Routes.MAIN) {
+        composable(Routes.MAIN) {
+            MainScreen(navController, taskList, alarmController, wallet, level, swordShop, monsterManager)
+        }
+        composable(Routes.ADD_TASK) {
+            AddTaskScreen(navController, taskList, alarmController)
+        }
+        composable(Routes.MINI_GAME) {
+            MiniGameScreen(navController, level, swordShop, wallet, monsterManager)
+        }
     }
 }
-

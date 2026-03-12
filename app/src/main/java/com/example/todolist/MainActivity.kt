@@ -11,7 +11,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.MonsterManager
 import com.example.todolist.controller.TaskList
+import com.example.todolist.model.Level
+import com.example.todolist.model.SwordShop
+import com.example.todolist.model.Wallet
 import com.example.todolist.navigation.AppNavigation
 import com.example.todolist.ui.theme.ToDoListTheme
 
@@ -19,27 +23,30 @@ class MainActivity : ComponentActivity() {
 
     private val taskList = TaskList()
     private lateinit var alarmController: AlarmController
+    private lateinit var level: Level
+    private lateinit var swordShop: SwordShop
+    private lateinit var monsterManager: MonsterManager
+
+    private val wallet = Wallet()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            Toast.makeText(this, "Notifications autorisées", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Notifications refusées", Toast.LENGTH_SHORT).show()
-        }
+        val msgResId = if (isGranted) R.string.notifications_granted else R.string.notifications_denied
+        Toast.makeText(this, getString(msgResId), Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         alarmController = AlarmController(this)
-
+        level = Level(this)
+        swordShop = SwordShop(this)
+        monsterManager = MonsterManager(this)
         checkNotificationPermission()
-
         enableEdgeToEdge()
         setContent {
             ToDoListTheme {
-                AppNavigation(taskList, alarmController)
+                AppNavigation(taskList, alarmController, wallet, level, swordShop, monsterManager)
             }
         }
     }
