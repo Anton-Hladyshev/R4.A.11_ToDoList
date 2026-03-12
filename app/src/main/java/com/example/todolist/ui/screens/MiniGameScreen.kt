@@ -23,6 +23,7 @@ import com.example.todolist.R
 import com.example.todolist.controller.MonsterManager
 import com.example.todolist.model.*
 import com.example.todolist.ui.components.*
+import com.example.todolist.utils.AssetLoader
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -115,15 +116,12 @@ fun MiniGameScreen(
         }
     }
 
-    // Load background from assets
-    val backgroundBitmap = remember(level.currentLevel) {
-        try {
-            val assetPath = "backgrounds/${level.getBackgroundResourceName()}.png"
-            val inputStream = context.assets.open(assetPath)
-            BitmapFactory.decodeStream(inputStream)
-        } catch (e: Exception) {
-            null
-        }
+    // Load decor and ground from assets
+    val decorBitmap = remember(level.currentLevel) {
+        AssetLoader.loadBitmap(context, "backgrounds/${level.getDecorResourceName()}.png")
+    }
+    val groundBitmap = remember(level.currentLevel) {
+        AssetLoader.loadBitmap(context, "grounds/${level.getGroundResourceName()}.png")
     }
 
     val content = @Composable { padding: PaddingValues ->
@@ -134,63 +132,63 @@ fun MiniGameScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             Box(modifier = Modifier.weight(1f)) {
-                // Background Image - Aligned to bottom to keep the floor consistent
-                if (backgroundBitmap != null) {
-                    Image(
-                        bitmap = backgroundBitmap.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        alignment = Alignment.BottomCenter
-                    )
-                } else {
-                    val fallbackResId = context.resources.getIdentifier(
-                        level.getBackgroundResourceName(),
-                        "drawable",
-                        context.packageName
-                    )
-                    if (fallbackResId != 0) {
-                        Image(
-                            painter = painterResource(id = fallbackResId),
-                            contentDescription = null,
+                // Environment Layout
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // 1. Decor Area (Background)
+                    Box(modifier = Modifier.weight(1f)) {
+                        decorBitmap?.let {
+                            Image(
+                                bitmap = it.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        // Entities placed at the bottom of the decor area
+                        Box(
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            alignment = Alignment.BottomCenter
-                        )
-                    }
-                }
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            // Monster - aligned to the bottom of the decor area (where ground starts)
+                            currentMonster?.let { m ->
+                                MonsterComponent(
+                                    monster = m,
+                                    currentFrameIndex = currentFrameIndex,
+                                    alpha = monsterAlpha.value,
+                                    scale = monsterScale.value,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .offset(x = 60.dp)
+                                )
+                            }
 
-                // Game Scene
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Monster - Placed relative to the bottom
-                    currentMonster?.let { m ->
-                        MonsterComponent(
-                            monster = m,
-                            currentFrameIndex = currentFrameIndex,
-                            alpha = monsterAlpha.value,
-                            scale = monsterScale.value,
+                            // Sword
+                            SwordComponent(
+                                sword = swordShop.currentSword,
+                                rotation = swordRotation.value,
+                                translationY = swordTranslationY.value,
+                                scale = swordScale.value,
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .padding(start = 50.dp, bottom = 40.dp)
+                            )
+                        }
+                    }
+
+                    // 2. Ground Area (Below Decor)
+                    groundBitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = null,
                             modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                // Adjusting Y to match the floor in cropped background
-                                .offset(x = 60.dp, y = (-64).dp)
+                                .fillMaxWidth(),
+                            contentScale = ContentScale.Crop
                         )
                     }
-
-                    // Sword - Aligned with the monster
-                    SwordComponent(
-                        sword = swordShop.currentSword,
-                        rotation = swordRotation.value,
-                        translationY = swordTranslationY.value,
-                        scale = swordScale.value,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(start = 50.dp, bottom = 100.dp)
-                    )
                 }
                 
-                // Top UI with Custom Progress Bars
+                // Top UI Overlay
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopCenter)

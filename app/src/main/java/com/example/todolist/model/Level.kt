@@ -13,7 +13,8 @@ class Level(context: Context, initialLevel: Int = 1) {
     var currentXp by mutableIntStateOf(0)
         private set
 
-    private val levelBackgrounds = mutableMapOf<Int, String>()
+    private val levelDecors = mutableMapOf<Int, String>()
+    private val levelGrounds = mutableMapOf<Int, String>()
     private val levelMaxXp = mutableMapOf<Int, Int>()
 
     init {
@@ -24,17 +25,20 @@ class Level(context: Context, initialLevel: Int = 1) {
         val rows = CsvReader.readCsv(context, "levels.csv")
         if (rows.isEmpty()) {
             for (i in 1..9) {
-                levelBackgrounds[i] = "full_bg_$i"
+                levelDecors[i] = "full_bg_$i"
+                levelGrounds[i] = "ground$i"
                 levelMaxXp[i] = i * 1000
             }
         } else {
             rows.forEach { tokens ->
-                if (tokens.size >= 3) {
+                if (tokens.size >= 4) {
                     val levelNum = tokens[0].toIntOrNull()
-                    val imageName = tokens[1]
-                    val maxXp = tokens[2].toIntOrNull()
+                    val decorName = tokens[1]
+                    val groundName = tokens[2]
+                    val maxXp = tokens[3].toIntOrNull()
                     if (levelNum != null && maxXp != null) {
-                        levelBackgrounds[levelNum] = imageName
+                        levelDecors[levelNum] = decorName
+                        levelGrounds[levelNum] = groundName
                         levelMaxXp[levelNum] = maxXp
                     }
                 }
@@ -47,7 +51,7 @@ class Level(context: Context, initialLevel: Int = 1) {
         val maxXp = levelMaxXp[currentLevel] ?: return
         
         if (currentXp >= maxXp) {
-            if (levelBackgrounds.containsKey(currentLevel + 1)) {
+            if (levelDecors.containsKey(currentLevel + 1)) {
                 currentXp -= maxXp
                 currentLevel++
             } else {
@@ -60,7 +64,11 @@ class Level(context: Context, initialLevel: Int = 1) {
         return levelMaxXp[currentLevel] ?: 100
     }
 
-    fun getBackgroundResourceName(): String {
-        return levelBackgrounds[currentLevel] ?: "full_bg_1"
+    fun getDecorResourceName(): String {
+        return levelDecors[currentLevel] ?: "full_bg_1"
+    }
+
+    fun getGroundResourceName(): String {
+        return levelGrounds[currentLevel] ?: "ground1"
     }
 }
