@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.MonsterManager
+import com.example.todolist.controller.PhotoController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Level
 import com.example.todolist.model.SwordShop
@@ -42,7 +43,8 @@ fun MainScreen(
     wallet: Wallet,
     level: Level,
     swordShop: SwordShop,
-    monsterManager: MonsterManager
+    monsterManager: MonsterManager,
+    photoController: PhotoController
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -70,7 +72,8 @@ fun MainScreen(
             wallet = wallet,
             level = level,
             swordShop = swordShop,
-            monsterManager = monsterManager
+            monsterManager = monsterManager,
+            photoController = photoController
         )
     }
 }
@@ -131,7 +134,8 @@ private fun MainNavigationHost(
     wallet: Wallet,
     level: Level,
     swordShop: SwordShop,
-    monsterManager: MonsterManager
+    monsterManager: MonsterManager,
+    photoController: PhotoController
 ) {
     NavHost(
         navController = navController,
@@ -146,7 +150,8 @@ private fun MainNavigationHost(
                 wallet = wallet,
                 level = level,
                 swordShop = swordShop,
-                showScaffold = false
+                showScaffold = false,
+                photoController = photoController
             )
         }
         composable(BottomNavItem.Game.route) {

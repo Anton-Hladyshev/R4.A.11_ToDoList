@@ -32,7 +32,7 @@ fun AppNavigation(
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.MAIN) {
         composable(Routes.MAIN) {
-            MainScreen(navController, taskList, alarmController, wallet, level, swordShop, monsterManager)
+            MainScreen(navController, taskList, alarmController, wallet, level, swordShop, monsterManager, photoController)
         }
         composable(Routes.ADD_TASK) {
             AddTaskScreen(navController, taskList, alarmController, photoController)

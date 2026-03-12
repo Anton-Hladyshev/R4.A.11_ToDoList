@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.PhotoController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.*
 import com.example.todolist.model.enums.Periodicity
@@ -45,7 +46,8 @@ fun TaskListScreen(
     wallet: Wallet,
     level: Level,
     swordShop: SwordShop,
-    showScaffold: Boolean = true
+    showScaffold: Boolean = true,
+    photoController: PhotoController
 ) {
     val context = LocalContext.current
     val taskRewardMultiplier = remember { context.resources.getInteger(R.integer.task_reward) }
@@ -235,6 +237,7 @@ fun TaskListScreen(
     taskToEdit?.let { task ->
         EditTaskDialog(
             task = task,
+            photoController = photoController,
             onDismiss = { taskToEdit = null },
             onSave = {
                 refreshCounter++

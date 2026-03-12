@@ -33,7 +33,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
-import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
