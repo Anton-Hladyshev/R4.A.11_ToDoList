@@ -15,13 +15,18 @@ data class Task(
     override var deadline: Calendar = Calendar.getInstance(),
     override var state: State = State.TODO,
     override var periodicity: Periodicity? = null,
-    override var priority: Priority? = null
+    override var priority: Priority? = null,
+    val photos: MutableList<PhotoInfo> = mutableListOf()
 ) : Editable {
 
     override fun editTitle(newTitle: String) { title = newTitle }
     override fun editDescription(newDescr: String) { description = newDescr }
     override fun changeState(newState: State) { state = newState }
-    
+
+    fun addPhoto(photo: PhotoInfo) { photos.add(photo) }
+    fun removePhoto(photoId: String) { photos.removeAll { it.id == photoId } }
+    fun getPhoto(photoId: String): PhotoInfo? = photos.find { it.id == photoId }
+
     override fun updateDeadlineDate(newDateMillis: Long) {
         val newDate = Calendar.getInstance().apply { timeInMillis = newDateMillis }
         deadline.set(Calendar.YEAR, newDate.get(Calendar.YEAR))
