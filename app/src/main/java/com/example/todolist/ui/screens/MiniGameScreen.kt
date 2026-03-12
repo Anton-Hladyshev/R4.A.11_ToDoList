@@ -1,6 +1,7 @@
 package com.example.todolist.ui.screens
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,6 +43,7 @@ fun MiniGameScreen(
     val scope = rememberCoroutineScope()
     val swordRotation = remember { Animatable(0f) }
     val swordTranslationY = remember { Animatable(0f) }
+    val swordScale = remember { Animatable(1f) }
 
     val backgroundResId = context.resources.getIdentifier(
         level.getBackgroundResourceName(),
@@ -64,15 +66,20 @@ fun MiniGameScreen(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
+                        wallet.deposit(1)
                         scope.launch {
-                            // Strike animation
+                            // Attack animation
                             launch {
-                                swordRotation.animateTo(-45f, animationSpec = tween(100))
-                                swordRotation.animateTo(0f, animationSpec = tween(100))
+                                swordRotation.animateTo(90f, animationSpec = tween(50, easing = FastOutSlowInEasing))
+                                swordRotation.animateTo(0f, animationSpec = tween(150))
                             }
                             launch {
-                                swordTranslationY.animateTo(20f, animationSpec = tween(100))
-                                swordTranslationY.animateTo(0f, animationSpec = tween(100))
+                                swordTranslationY.animateTo(40f, animationSpec = tween(50, easing = FastOutSlowInEasing))
+                                swordTranslationY.animateTo(0f, animationSpec = tween(150))
+                            }
+                            launch {
+                                swordScale.animateTo(1.2f, animationSpec = tween(50))
+                                swordScale.animateTo(1f, animationSpec = tween(150))
                             }
                         }
                     }
@@ -90,22 +97,25 @@ fun MiniGameScreen(
                 // Animated Sword
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.CenterStart
                 ) {
                     Image(
                         painter = painterResource(id = swordShop.currentSword.image),
                         contentDescription = "Sword",
                         modifier = Modifier
-                            .size(250.dp)
+                            .padding(start = 50.dp, top = 100.dp)
+                            .size(100.dp)
                             .graphicsLayer {
                                 rotationZ = swordRotation.value
                                 translationY = swordTranslationY.value
-                                transformOrigin = TransformOrigin(0.5f, 0.8f) // Pivot near handle
+                                scaleX = swordScale.value
+                                scaleY = swordScale.value
+                                transformOrigin = TransformOrigin(0.2f, 0.8f)
                             }
                     )
                 }
                 
-                // Overlay text for level (if needed, but it's in top bar too)
+                // Overlay text for level
                 Text(
                     text = "Niveau ${level.currentLevel}",
                     style = MaterialTheme.typography.headlineSmall,
