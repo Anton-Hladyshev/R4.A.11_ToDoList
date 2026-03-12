@@ -150,12 +150,17 @@ fun TaskCard(
                             isDone = true
                             isValidating = true
                             coroutineScope.launch {
+                                val wasRewarded = task.isRewarded
                                 task.validate()
                                 // After validate: periodic tasks go back to TODO
                                 isDone = task.state == State.DONE
                                 currentTaskState = task.state
                                 isValidating = false
-                                onTaskCompleted()
+                                
+                                if (!wasRewarded) {
+                                    task.isRewarded = true
+                                    onTaskCompleted()
+                                }
                             }
                             alarmController.cancelAlarms(task)
                         } else {

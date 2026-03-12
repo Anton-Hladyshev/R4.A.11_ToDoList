@@ -37,10 +37,10 @@ object CsvManager {
         val file = File(context.filesDir, "tasks_save.csv")
         try {
             val writer = BufferedWriter(FileWriter(file))
-            writer.write("id;title;description;deadline;state;periodicity;priority")
+            writer.write("id;title;description;deadline;state;periodicity;priority;isRewarded")
             writer.newLine()
             tasks.forEach { task ->
-                val line = "${task.id};${task.title};${task.description};${task.deadline.timeInMillis};${task.state.name};${task.periodicity?.name ?: ""};${task.priority?.name ?: ""}"
+                val line = "${task.id};${task.title};${task.description};${task.deadline.timeInMillis};${task.state.name};${task.periodicity?.name ?: ""};${task.priority?.name ?: ""};${task.isRewarded}"
                 writer.write(line)
                 writer.newLine()
             }
@@ -71,9 +71,10 @@ object CsvManager {
                         val state = try { State.valueOf(tokens[4]) } catch (e: Exception) { State.TODO }
                         val periodicity = try { if (tokens[5].isNotEmpty()) Periodicity.valueOf(tokens[5]) else null } catch (e: Exception) { null }
                         val priority = try { if (tokens[6].isNotEmpty()) Priority.valueOf(tokens[6]) else null } catch (e: Exception) { null }
+                        val isRewarded = if (tokens.size >= 8) tokens[7].toBoolean() else false
 
                         val calendar = Calendar.getInstance().apply { timeInMillis = deadlineMillis }
-                        tasks.add(Task(id, title, description, calendar, state, periodicity, priority))
+                        tasks.add(Task(id, title, description, calendar, state, periodicity, priority, isRewarded))
                     }
                 }
                 line = reader.readLine()

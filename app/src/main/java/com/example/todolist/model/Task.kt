@@ -18,7 +18,8 @@ class Task(
     deadline: Calendar = Calendar.getInstance(),
     state: State = State.TODO,
     periodicity: Periodicity? = null,
-    priority: Priority? = null
+    priority: Priority? = null,
+    isRewarded: Boolean = false
 ) : Editable {
 
     override var title by mutableStateOf(title)
@@ -27,6 +28,7 @@ class Task(
     override var state by mutableStateOf(state)
     override var periodicity by mutableStateOf(periodicity)
     override var priority by mutableStateOf(priority)
+    var isRewarded by mutableStateOf(isRewarded)
 
     override fun editTitle(newTitle: String) { title = newTitle }
     override fun editDescription(newDescr: String) { description = newDescr }
@@ -73,6 +75,8 @@ class Task(
             }
             deadline = updatedDeadline
             state = State.TODO
+            // Reset isRewarded for periodic tasks so they can be rewarded again in the next period
+            isRewarded = false
         }
     }
     
