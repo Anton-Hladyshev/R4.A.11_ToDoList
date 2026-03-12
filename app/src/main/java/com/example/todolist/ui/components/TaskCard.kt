@@ -2,6 +2,7 @@ package com.example.todolist.ui.components
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -21,9 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
@@ -217,6 +221,42 @@ fun TaskCard(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.Gray
                             )
+                        }
+                    }
+
+                    // Photo thumbnails
+                    if (task.photos.isNotEmpty()) {
+                        val context = LocalContext.current
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            task.photos.take(4).forEach { photo ->
+                                val file = java.io.File(context.filesDir, "photos/${photo.fileName}")
+                                Image(
+                                    painter = rememberAsyncImagePainter(file),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            if (task.photos.size > 4) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color.LightGray),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "+${task.photos.size - 4}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.DarkGray
+                                    )
+                                }
+                            }
                         }
                     }
                 }
