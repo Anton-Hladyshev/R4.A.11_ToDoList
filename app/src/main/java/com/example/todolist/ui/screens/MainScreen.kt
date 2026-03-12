@@ -7,20 +7,31 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.MonsterManager
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Level
 import com.example.todolist.model.SwordShop
 import com.example.todolist.model.Wallet
 import com.example.todolist.ui.components.CoinsView
+
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val labelResId: Int, val titleResId: Int) {
+    object List : BottomNavItem("list", Icons.Default.List, R.string.nav_list, R.string.task_list_title)
+    object Game : BottomNavItem("game", Icons.Default.PlayArrow, R.string.nav_game, R.string.mini_game_title)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,82 +41,123 @@ fun MainScreen(
     alarmController: AlarmController,
     wallet: Wallet,
     level: Level,
-    swordShop: SwordShop
+    swordShop: SwordShop,
+    monsterManager: MonsterManager
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    
+    val items = listOf(
+        BottomNavItem.List,
+        BottomNavItem.Game
+    )
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    val title = if (currentDestination?.route == "list") "Ma Liste de Tâches" else "Mini Jeu"
-                    Text(title)
-                },
-                actions = {
-                    CoinsView(wallet = wallet, modifier = Modifier.padding(end = 16.dp))
-                }
-            )
+            MainTopBar(currentDestination, items, wallet)
         },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = null) },
-                    label = { Text("Liste") },
-                    selected = currentDestination?.hierarchy?.any { it.route == "list" } == true,
-                    onClick = {
-                        navController.navigate("list") {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
-                    label = { Text("Jeux") },
-                    selected = currentDestination?.hierarchy?.any { it.route == "game" } == true,
-                    onClick = {
-                        navController.navigate("game") {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                )
-            }
+            MainBottomNavigation(navController, currentDestination, items)
         }
     ) { innerPadding ->
-        NavHost(
+        MainNavigationHost(
             navController = navController,
-            startDestination = "list",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("list") {
-                TaskListScreen(
-                    navController = parentNavController,
-                    taskList = taskList,
-                    alarmController = alarmController,
-                    wallet = wallet,
-                    level = level,
-                    swordShop = swordShop,
-                    showScaffold = false
-                )
+            modifier = Modifier.padding(innerPadding),
+            parentNavController = parentNavController,
+            taskList = taskList,
+            alarmController = alarmController,
+            wallet = wallet,
+            level = level,
+            swordShop = swordShop,
+            monsterManager = monsterManager
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainTopBar(
+    currentDestination: NavDestination?,
+    items: List<BottomNavItem>,
+    wallet: Wallet
+) {
+    val currentItem = items.find { it.route == currentDestination?.route }
+    TopAppBar(
+        title = { 
+            if (currentItem != null) {
+                Text(stringResource(id = currentItem.titleResId))
             }
-            composable("game") {
-                MiniGameScreen(
-                    navController = parentNavController,
-                    level = level,
-                    swordShop = swordShop,
-                    wallet = wallet,
-                    showScaffold = false
-                )
-            }
+        },
+        actions = {
+            CoinsView(wallet = wallet, modifier = Modifier.padding(end = 16.dp))
+        }
+    )
+}
+
+@Composable
+private fun MainBottomNavigation(
+    navController: NavHostController,
+    currentDestination: NavDestination?,
+    items: List<BottomNavItem>
+) {
+    NavigationBar {
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(item.icon, contentDescription = null) },
+                label = { Text(stringResource(id = item.labelResId)) },
+                selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MainNavigationHost(
+    navController: NavHostController,
+    modifier: Modifier,
+    parentNavController: NavController,
+    taskList: TaskList,
+    alarmController: AlarmController,
+    wallet: Wallet,
+    level: Level,
+    swordShop: SwordShop,
+    monsterManager: MonsterManager
+) {
+    NavHost(
+        navController = navController,
+        startDestination = BottomNavItem.List.route,
+        modifier = modifier
+    ) {
+        composable(BottomNavItem.List.route) {
+            TaskListScreen(
+                navController = parentNavController,
+                taskList = taskList,
+                alarmController = alarmController,
+                wallet = wallet,
+                level = level,
+                swordShop = swordShop,
+                showScaffold = false
+            )
+        }
+        composable(BottomNavItem.Game.route) {
+            MiniGameScreen(
+                navController = parentNavController,
+                level = level,
+                swordShop = swordShop,
+                wallet = wallet,
+                monsterManager = monsterManager,
+                showScaffold = false
+            )
         }
     }
 }

@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.MonsterManager
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Level
 import com.example.todolist.model.SwordShop
@@ -23,18 +24,19 @@ fun AppNavigation(
     alarmController: AlarmController,
     wallet: Wallet,
     level: Level,
-    swordShop: SwordShop
+    swordShop: SwordShop,
+    monsterManager: MonsterManager
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.MAIN) {
         composable(Routes.MAIN) {
-            MainScreen(navController, taskList, alarmController, wallet, level, swordShop)
+            MainScreen(navController, taskList, alarmController, wallet, level, swordShop, monsterManager)
         }
         composable(Routes.ADD_TASK) {
             AddTaskScreen(navController, taskList, alarmController)
         }
         composable(Routes.MINI_GAME) {
-            MiniGameScreen(navController, level, swordShop, wallet)
+            MiniGameScreen(navController, level, swordShop, wallet, monsterManager)
         }
     }
 }

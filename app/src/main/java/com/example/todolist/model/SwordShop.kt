@@ -3,9 +3,9 @@ package com.example.todolist.model
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.todolist.R
+import com.example.todolist.utils.AssetLoader
 import com.example.todolist.utils.CsvReader
 
 class SwordShop(context: Context) {
@@ -36,7 +36,8 @@ class SwordShop(context: Context) {
     }
 
     private fun loadSwords(context: Context) {
-        val swordPriceMultiplier =  context.resources.getInteger(R.integer.sword_price)
+        val swordPriceMultiplier = context.resources.getInteger(R.integer.sword_price)
+        val swordDamageMultiplier = context.resources.getInteger(R.integer.sword_damage)
         val rows = CsvReader.readCsv(context, "swordInfo.csv", ";")
         rows.forEach { tokens ->
             if (tokens.size >= 3) {
@@ -47,8 +48,13 @@ class SwordShop(context: Context) {
                 if (id != null && materialId != null) {
                     val material = materials[materialId] ?: SwordMaterial(materialId, "?", "❓", "Inconnu")
                     val price = id * swordPriceMultiplier
+                    val damage = (id + 1) * swordDamageMultiplier
+                    
+                    // Use AssetLoader to load the bitmap
+                    val bitmap = AssetLoader.loadBitmap(context, "swords/$swordSrc.png")
+                    
                     val imageResId = context.resources.getIdentifier(swordSrc, "drawable", context.packageName)
-                    swords.add(Sword(id, material, swordSrc, if (id == 0) 0 else price, imageResId))
+                    swords.add(Sword(id, material, swordSrc, if (id == 0) 0 else price, imageResId, damage, bitmap))
                 }
             }
         }

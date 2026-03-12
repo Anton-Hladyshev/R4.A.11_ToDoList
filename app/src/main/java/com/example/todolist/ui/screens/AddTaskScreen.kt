@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Task
@@ -34,7 +36,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
     var selectedPriority by remember { mutableStateOf<Priority?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Nouvelle Tâche") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(id = R.string.new_task_title)) }) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -48,14 +50,14 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
             TextField(
                 value = taskTitle,
                 onValueChange = { taskTitle = it },
-                label = { Text("Titre") },
+                label = { Text(stringResource(id = R.string.title_label)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
             TextField(
                 value = taskDescription,
                 onValueChange = { taskDescription = it },
-                label = { Text("Description") },
+                label = { Text(stringResource(id = R.string.description_label)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
@@ -64,14 +66,14 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
 
             // Date picker
             DatePickerCard(
-                label = "Date de fin",
+                label = stringResource(id = R.string.deadline_date_label),
                 date = selectedDate,
                 onDateSelected = { selectedDate = it }
             )
 
             // Time picker
             TimePickerCard(
-                label = "Heure de fin",
+                label = stringResource(id = R.string.deadline_time_label),
                 time = selectedTime,
                 onTimeSelected = { selectedTime = it }
             )
@@ -96,7 +98,7 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                     onClick = { navController.popBackStack() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Retour")
+                    Text(stringResource(id = R.string.back))
                 }
                 Button(
                     onClick = {
@@ -129,10 +131,9 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                     modifier = Modifier.weight(1f),
                     enabled = taskTitle.isNotBlank()
                 ) {
-                    Text("Valider")
+                    Text(stringResource(id = R.string.validate))
                 }
             }
         }
     }
 }
-

@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">ToDoList</string>
+    <string name="back">Retour</string>
+    <string name="mini_game_title">Mini Jeu</string>
+    <string name="level_label">Niveau %1$d</string>
+    <string name="xp_progress_label">Progression Niveau</string>
+    <string name="current_sword_title">Épée Actuelle</string>
+    <string name="upgrade_button">Améliorer %1$d</string>
+    <string name="ultimate_sword_msg">Tu possèdes l\'épée ultime ! ️</string>
+    <string name="coins_desc">Pièces</string>
+    <string name="task_list_title">Ma Liste de Tâches</string>
+    <string name="show_filters">Afficher les filtres</string>
+    <string name="hide_filters">Masquer les filtres</string>
+    <string name="no_tasks">Aucune tâche pour le moment&#8230;</string>
+    <string name="no_filtered_tasks">Aucune tâche ne correspond aux filtres.</string>
+    <string name="create_task">Créer une nouvelle tâche</string>
+    <string name="notifications_granted">Notifications autorisées</string>
+    <string name="notifications_denied">Notifications refusées</string>
+    <string name="nav_list">Liste</string>
+    <string name="nav_game">Jeux</string>
+    <string name="new_task_title">Nouvelle Tâche</string>
+    <string name="title_label">Titre</string>
+    <string name="description_label">Description</string>
+    <string name="deadline_date_label">Date de fin</string>
+    <string name="deadline_time_label">Heure de fin</string>
+    <string name="validate">Valider</string>
 </resources>

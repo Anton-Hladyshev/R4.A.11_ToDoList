@@ -1,0 +1,15 @@
+id;folder;frameCount;level;hp
+1;monster1;4;1;50
+2;monster2;6;1;80
+3;monster3;5;2;120
+4;monster4;4;2;150
+5;monster5;4;3;200
+6;monster6;4;3;250
+7;monster7;5;4;350
+8;monster8;6;4;400
+9;monster9;4;5;550
+10;monster10;8;6;600
+11;monster11;4;7;700
+12;monster12;6;8;800
+13;monster13;5;9;900
+14;monster14;4;9;1000

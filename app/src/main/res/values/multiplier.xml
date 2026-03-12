@@ -2,4 +2,5 @@
 <resources>
     <integer name="task_reward">100</integer>
     <integer name="sword_price">50</integer>
+    <integer name="sword_damage">25</integer>
 </resources>

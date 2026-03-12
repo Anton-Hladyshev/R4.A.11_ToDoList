@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.todolist.R
@@ -93,7 +94,7 @@ fun TaskListScreen(
                 onClick = { showFilters = !showFilters },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (showFilters) "Masquer les filtres" else "Afficher les filtres")
+                Text(if (showFilters) stringResource(id = R.string.hide_filters) else stringResource(id = R.string.show_filters))
             }
 
             // Filter section
@@ -173,9 +174,9 @@ fun TaskListScreen(
                         ) {
                             Text(
                                 text = if (taskList.tasks.isEmpty())
-                                    "Aucune tâche pour le moment..."
+                                    stringResource(id = R.string.no_tasks)
                                 else
-                                    "Aucune tâche ne correspond aux filtres.",
+                                    stringResource(id = R.string.no_filtered_tasks),
                                 color = Color.Gray
                             )
                         }
@@ -191,7 +192,7 @@ fun TaskListScreen(
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                Text("Créer une nouvelle tâche")
+                Text(stringResource(id = R.string.create_task))
             }
         }
     }
@@ -201,10 +202,10 @@ fun TaskListScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Ma Liste de Tâches") },
+                        title = { Text(stringResource(id = R.string.task_list_title)) },
                         actions = {
                             IconButton(onClick = { navController.navigate(Routes.MINI_GAME) }) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = "Mini Jeu")
+                                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(id = R.string.mini_game_title))
                             }
                             CoinsView(wallet = wallet, modifier = Modifier.padding(end = 16.dp))
                         }
