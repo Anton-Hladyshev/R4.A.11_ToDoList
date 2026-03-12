@@ -29,6 +29,8 @@ import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,7 +49,22 @@ fun TaskCard(
 ) {
     var isDone by remember { mutableStateOf(task.state == State.DONE) }
     var isValidating by remember { mutableStateOf(false) }
+    var currentTaskState by remember { mutableStateOf(task.state) }
     val coroutineScope = rememberCoroutineScope()
+
+    // Periodic check for LATE status
+    LaunchedEffect(task.deadline, task.state) {
+        while (isActive) {
+            if (task.state != State.DONE) {
+                val oldState = task.state
+                task.cancel() // Updates state to LATE if needed
+                if (task.state != oldState) {
+                    currentTaskState = task.state
+                }
+            }
+            delay(30000) // Check every 30 seconds
+        }
+    }
 
     val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
@@ -136,6 +153,7 @@ fun TaskCard(
                                 task.validate()
                                 // After validate: periodic tasks go back to TODO
                                 isDone = task.state == State.DONE
+                                currentTaskState = task.state
                                 isValidating = false
                                 onTaskCompleted()
                             }
@@ -143,6 +161,7 @@ fun TaskCard(
                         } else {
                             isDone = false
                             task.cancel()
+                            currentTaskState = task.state
                             alarmController.scheduleTaskAlarm(task)
                         }
                     },
@@ -169,10 +188,11 @@ fun TaskCard(
                                     )
                             )
                         }
+                        val isLate = task.state == State.LATE
                         Text(
                             text = task.title,
                             style = MaterialTheme.typography.titleMedium,
-                            color = if (isDone) Color.Gray else Color.Black
+                            color = if (isDone) Color.Gray else if (isLate) Color(0xFFFF5252) else Color.Black
                         )
                     }
                     if (task.description.isNotEmpty()) {
@@ -188,13 +208,13 @@ fun TaskCard(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = "Deadline",
                             modifier = Modifier.size(14.dp),
-                            tint = Color.Gray
+                            tint = if (task.state == State.LATE) Color(0xFFFF5252) else Color.Gray
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = dateTimeFormat.format(task.deadline.time),
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = if (task.state == State.LATE) Color(0xFFFF5252) else Color.Gray
                         )
                     }
                     if (task.periodicity != null) {
@@ -246,4 +266,3 @@ fun TaskCard(
         }
     }
 }
-

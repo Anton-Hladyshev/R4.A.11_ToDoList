@@ -1,5 +1,8 @@
 package com.example.todolist.model
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
@@ -8,15 +11,22 @@ import kotlinx.coroutines.delay
 import java.util.Calendar
 import java.util.UUID
 
-data class Task(
+class Task(
     val id: String = UUID.randomUUID().toString(),
-    override var title: String,
-    override var description: String = "",
-    override var deadline: Calendar = Calendar.getInstance(),
-    override var state: State = State.TODO,
-    override var periodicity: Periodicity? = null,
-    override var priority: Priority? = null
+    title: String,
+    description: String = "",
+    deadline: Calendar = Calendar.getInstance(),
+    state: State = State.TODO,
+    periodicity: Periodicity? = null,
+    priority: Priority? = null
 ) : Editable {
+
+    override var title by mutableStateOf(title)
+    override var description by mutableStateOf(description)
+    override var deadline by mutableStateOf(deadline)
+    override var state by mutableStateOf(state)
+    override var periodicity by mutableStateOf(periodicity)
+    override var priority by mutableStateOf(priority)
 
     override fun editTitle(newTitle: String) { title = newTitle }
     override fun editDescription(newDescr: String) { description = newDescr }
@@ -24,16 +34,22 @@ data class Task(
     
     override fun updateDeadlineDate(newDateMillis: Long) {
         val newDate = Calendar.getInstance().apply { timeInMillis = newDateMillis }
-        deadline.set(Calendar.YEAR, newDate.get(Calendar.YEAR))
-        deadline.set(Calendar.MONTH, newDate.get(Calendar.MONTH))
-        deadline.set(Calendar.DAY_OF_MONTH, newDate.get(Calendar.DAY_OF_MONTH))
+        val updatedDeadline = (deadline.clone() as Calendar).apply {
+            set(Calendar.YEAR, newDate.get(Calendar.YEAR))
+            set(Calendar.MONTH, newDate.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, newDate.get(Calendar.DAY_OF_MONTH))
+        }
+        deadline = updatedDeadline
     }
 
     override fun updateDeadlineTime(hour: Int, minute: Int) {
-        deadline.set(Calendar.HOUR_OF_DAY, hour)
-        deadline.set(Calendar.MINUTE, minute)
-        deadline.set(Calendar.SECOND, 0)
-        deadline.set(Calendar.MILLISECOND, 0)
+        val updatedDeadline = (deadline.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        deadline = updatedDeadline
     }
 
     override fun changePeriodicity(newPeriodicity: Periodicity?) {
@@ -47,13 +63,15 @@ data class Task(
     suspend fun validate() {
         if (periodicity == null) {
             state = State.DONE
-        }
-         else {
+        } else {
             state = State.DONE
             delay(2000)
-            deadline.add(Calendar.DAY_OF_YEAR, periodicity!!.period.days)
-            deadline.add(Calendar.MONTH, periodicity!!.period.months)
-            deadline.add(Calendar.YEAR, periodicity!!.period.years)
+            val updatedDeadline = (deadline.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_YEAR, periodicity!!.period.days)
+                add(Calendar.MONTH, periodicity!!.period.months)
+                add(Calendar.YEAR, periodicity!!.period.years)
+            }
+            deadline = updatedDeadline
             state = State.TODO
         }
     }
