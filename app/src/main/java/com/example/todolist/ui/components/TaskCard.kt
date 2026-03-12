@@ -2,7 +2,9 @@ package com.example.todolist.ui.components
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -21,13 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
-import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -47,6 +52,7 @@ fun TaskCard(
 ) {
     var isDone by remember { mutableStateOf(task.state == State.DONE) }
     var isValidating by remember { mutableStateOf(false) }
+    var selectedPhotoFile by remember { mutableStateOf<java.io.File?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
@@ -219,6 +225,43 @@ fun TaskCard(
                             )
                         }
                     }
+
+                    // Photo thumbnails
+                    if (task.photos.isNotEmpty()) {
+                        val context = LocalContext.current
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            task.photos.take(4).forEach { photo ->
+                                val file = java.io.File(context.filesDir, "photos/${photo.fileName}")
+                                Image(
+                                    painter = rememberAsyncImagePainter(file),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .clickable { selectedPhotoFile = file },
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            if (task.photos.size > 4) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color.LightGray),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "+${task.photos.size - 4}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.DarkGray
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (isValidating) {
@@ -244,6 +287,46 @@ fun TaskCard(
                 )
             }
         }
+    }
+
+    // Fullscreen photo viewer
+    if (selectedPhotoFile != null) {
+        AlertDialog(
+            onDismissRequest = { selectedPhotoFile = null },
+            confirmButton = {},
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(selectedPhotoFile),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.FillWidth
+                    )
+                    IconButton(
+                        onClick = { selectedPhotoFile = null },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(30.dp)
+                            .background(
+                                Color.Black.copy(alpha = 0.5f),
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Fermer",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        )
     }
 }
 

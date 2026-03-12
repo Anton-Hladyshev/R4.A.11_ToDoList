@@ -1,17 +1,31 @@
 package com.example.todolist.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
+import com.example.todolist.controller.PhotoController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.State
@@ -25,7 +39,12 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmController: AlarmController) {
+fun AddTaskScreen(
+    navController: NavController,
+    taskList: TaskList,
+    alarmController: AlarmController,
+    photoController: PhotoController
+) {
     var taskTitle by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf("") }
 
@@ -34,6 +53,15 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
     var selectedTime by remember { mutableStateOf(calendar.time) }
     var selectedPeriodicity by remember { mutableStateOf<Periodicity?>(null) }
     var selectedPriority by remember { mutableStateOf<Priority?>(null) }
+
+    // Collected photo URIs (not yet saved to internal storage)
+    val selectedPhotoUris = remember { mutableStateListOf<Uri>() }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        selectedPhotoUris.addAll(uris)
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(id = R.string.new_task_title)) }) }
@@ -90,6 +118,63 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                 onPriorityChanged = { selectedPriority = it }
             )
 
+            // ── Photos section ──────────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = stringResource(id = R.string.photos_label),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (selectedPhotoUris.isNotEmpty()) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(selectedPhotoUris) { uri ->
+                                Box(modifier = Modifier.size(80.dp)) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(uri),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    IconButton(
+                                        onClick = { selectedPhotoUris.remove(uri) },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = stringResource(id = R.string.remove_photo),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    OutlinedButton(
+                        onClick = { photoPickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(id = R.string.add_photo))
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -124,6 +209,12 @@ fun AddTaskScreen(navController: NavController, taskList: TaskList, alarmControl
                             periodicity = selectedPeriodicity,
                             priority = selectedPriority
                         )
+
+                        // Save collected photos to internal storage
+                        for (uri in selectedPhotoUris) {
+                            photoController.addPhoto(newTask, uri)
+                        }
+
                         taskList.addTask(newTask)
                         alarmController.scheduleTaskAlarm(newTask)
                         navController.popBackStack()
