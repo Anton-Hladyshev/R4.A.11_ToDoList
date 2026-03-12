@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import com.example.todolist.utils.CsvReader
+import com.example.todolist.utils.CsvManager
 
 class Level(context: Context, initialLevel: Int = 1) {
     var currentLevel by mutableIntStateOf(initialLevel)
@@ -22,7 +22,7 @@ class Level(context: Context, initialLevel: Int = 1) {
     }
 
     private fun loadLevelsFromCsv(context: Context) {
-        val rows = CsvReader.readCsv(context, "levels.csv")
+        val rows = CsvManager.readFromAssets(context, "levels.csv", ",")
         if (rows.isEmpty()) {
             for (i in 1..9) {
                 levelDecors[i] = "full_bg_$i"
@@ -58,6 +58,11 @@ class Level(context: Context, initialLevel: Int = 1) {
                 currentXp = maxXp // Cap at max level
             }
         }
+    }
+
+    fun restoreProgress(level: Int, xp: Int) {
+        currentLevel = if (levelDecors.containsKey(level)) level else 1
+        currentXp = xp
     }
 
     fun getLevelMaxXp(): Int {

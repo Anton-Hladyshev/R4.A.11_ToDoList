@@ -6,7 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import com.example.todolist.R
 import com.example.todolist.utils.AssetLoader
-import com.example.todolist.utils.CsvReader
+import com.example.todolist.utils.CsvManager
 
 class SwordShop(context: Context) {
     private val materials = mutableMapOf<Int, SwordMaterial>()
@@ -21,7 +21,7 @@ class SwordShop(context: Context) {
     }
 
     private fun loadMaterials(context: Context) {
-        val rows = CsvReader.readCsv(context, "swordMaterialInfo.csv", ";")
+        val rows = CsvManager.readFromAssets(context, "swordMaterialInfo.csv", ";")
         rows.forEach { tokens ->
             if (tokens.size >= 4) {
                 val id = tokens[0].toIntOrNull()
@@ -38,7 +38,7 @@ class SwordShop(context: Context) {
     private fun loadSwords(context: Context) {
         val swordPriceMultiplier = context.resources.getInteger(R.integer.sword_price)
         val swordDamageMultiplier = context.resources.getInteger(R.integer.sword_damage)
-        val rows = CsvReader.readCsv(context, "swordInfo.csv", ";")
+        val rows = CsvManager.readFromAssets(context, "swordInfo.csv", ";")
         rows.forEach { tokens ->
             if (tokens.size >= 3) {
                 val id = tokens[0].toIntOrNull()
@@ -57,6 +57,12 @@ class SwordShop(context: Context) {
                     swords.add(Sword(id, material, swordSrc, if (id == 0) 0 else price, imageResId, damage, bitmap))
                 }
             }
+        }
+    }
+
+    fun restoreProgress(swordIndex: Int) {
+        if (swordIndex >= 0 && swordIndex < swords.size) {
+            currentSwordIndex = swordIndex
         }
     }
 
