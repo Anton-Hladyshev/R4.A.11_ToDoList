@@ -78,7 +78,7 @@ fun TaskCard(
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
     ) {
-        // Background with trash icon (revealed on swipe)
+        // Background with trash icon
         Box(
             modifier = Modifier
                 .matchParentSize()

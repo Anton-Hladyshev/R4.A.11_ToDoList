@@ -12,8 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.todolist.R
 import com.example.todolist.controller.AlarmController
 import com.example.todolist.controller.TaskList
 import com.example.todolist.model.*
@@ -44,6 +46,8 @@ fun TaskListScreen(
     swordShop: SwordShop,
     showScaffold: Boolean = true
 ) {
+    val context = LocalContext.current
+    val taskRewardMultiplier = remember { context.resources.getInteger(R.integer.task_reward) }
     var showFilters by remember { mutableStateOf(false) }
 
     // Konfetti state
@@ -124,6 +128,9 @@ fun TaskListScreen(
                             TaskCard(
                                 task = task,
                                 onTaskCompleted = {
+                                    val reward = (task.priority?.level ?: 0) * taskRewardMultiplier
+                                    wallet.deposit(reward)
+
                                     konfettiParties = listOf(
                                         Party(
                                             speed = 0f,
