@@ -24,4 +24,7 @@
     <string name="deadline_date_label">Date de fin</string>
     <string name="deadline_time_label">Heure de fin</string>
     <string name="validate">Valider</string>
+    <string name="add_photo">Ajouter une photo</string>
+    <string name="photos_label">Photos</string>
+    <string name="remove_photo">Supprimer la photo</string>
 </resources>
