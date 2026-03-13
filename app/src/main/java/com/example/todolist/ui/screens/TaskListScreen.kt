@@ -131,7 +131,7 @@ fun TaskListScreen(
                             TaskCard(
                                 task = task,
                                 onTaskCompleted = {
-                                    val reward = (task.priority?.level ?: 0) * taskRewardMultiplier
+                                    val reward = 1+(task.priority?.level ?: 0) * taskRewardMultiplier
                                     wallet.deposit(reward)
 
                                     konfettiParties = listOf(
