@@ -13,13 +13,13 @@ import java.util.UUID
 
 class Task(
     val id: String = UUID.randomUUID().toString(),
-    override var title: String,
-    override var description: String = "",
-    override var deadline: Calendar = Calendar.getInstance(),
-    override var state: State = State.TODO,
-    override var periodicity: Periodicity? = null,
-    override var priority: Priority? = null,
-    val photos: MutableList<PhotoInfo> = mutableListOf()
+    title: String,
+    description: String = "",
+    deadline: Calendar = Calendar.getInstance(),
+    state: State = State.TODO,
+    periodicity: Periodicity? = null,
+    priority: Priority? = null,
+    val photos: MutableList<PhotoInfo> = mutableListOf(),
     isRewarded: Boolean = false
 ) : Editable {
 

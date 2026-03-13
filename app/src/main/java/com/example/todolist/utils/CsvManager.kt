@@ -1,10 +1,13 @@
 package com.example.todolist.utils
 
 import android.content.Context
+import com.example.todolist.model.PhotoInfo
 import com.example.todolist.model.Task
 import com.example.todolist.model.enums.Periodicity
 import com.example.todolist.model.enums.Priority
 import com.example.todolist.model.enums.State
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.*
 import java.util.*
 
@@ -37,10 +40,21 @@ object CsvManager {
         val file = File(context.filesDir, "tasks_save.csv")
         try {
             val writer = BufferedWriter(FileWriter(file))
-            writer.write("id;title;description;deadline;state;periodicity;priority;isRewarded")
+            writer.write("id;title;description;deadline;state;periodicity;priority;isRewarded;photosJson")
             writer.newLine()
             tasks.forEach { task ->
-                val line = "${task.id};${task.title};${task.description};${task.deadline.timeInMillis};${task.state.name};${task.periodicity?.name ?: ""};${task.priority?.name ?: ""};${task.isRewarded}"
+                val photosJson = JSONArray().apply {
+                    task.photos.forEach { info ->
+                        put(JSONObject().apply {
+                            put("id", info.id)
+                            put("taskId", info.taskId)
+                            put("fileName", info.fileName)
+                            put("timestamp", info.timestamp)
+                        })
+                    }
+                }.toString().replace(";", ",") // Avoid delimiter collision
+
+                val line = "${task.id};${task.title};${task.description};${task.deadline.timeInMillis};${task.state.name};${task.periodicity?.name ?: ""};${task.priority?.name ?: ""};${task.isRewarded};$photosJson"
                 writer.write(line)
                 writer.newLine()
             }
@@ -72,9 +86,38 @@ object CsvManager {
                         val periodicity = try { if (tokens[5].isNotEmpty()) Periodicity.valueOf(tokens[5]) else null } catch (e: Exception) { null }
                         val priority = try { if (tokens[6].isNotEmpty()) Priority.valueOf(tokens[6]) else null } catch (e: Exception) { null }
                         val isRewarded = if (tokens.size >= 8) tokens[7].toBoolean() else false
+                        
+                        val photos = mutableListOf<PhotoInfo>()
+                        if (tokens.size >= 9) {
+                            try {
+                                val photosJson = tokens[8]
+                                val jsonArray = JSONArray(photosJson)
+                                for (i in 0 until jsonArray.length()) {
+                                    val obj = jsonArray.getJSONObject(i)
+                                    photos.add(PhotoInfo(
+                                        id = obj.getString("id"),
+                                        taskId = obj.getString("taskId"),
+                                        fileName = obj.getString("fileName"),
+                                        timestamp = obj.getLong("timestamp")
+                                    ))
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
 
                         val calendar = Calendar.getInstance().apply { timeInMillis = deadlineMillis }
-                        tasks.add(Task(id, title, description, calendar, state, periodicity, priority, isRewarded))
+                        tasks.add(Task(
+                            id = id,
+                            title = title,
+                            description = description,
+                            deadline = calendar,
+                            state = state,
+                            periodicity = periodicity,
+                            priority = priority,
+                            isRewarded = isRewarded,
+                            photos = photos
+                        ))
                     }
                 }
                 line = reader.readLine()
